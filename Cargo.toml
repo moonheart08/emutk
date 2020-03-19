@@ -1,8 +1,8 @@
 [workspace]
 
 members = [
+    "emutk",
     "emutk-core",
     "emutk-6809",
     "emutk-testing",
-    "emutk",
 ]
