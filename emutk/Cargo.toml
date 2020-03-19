@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 emutk-core = { path = "../emutk-core" }
 emutk-6809 = { path = "../emutk-6809" }
-emutk-vax = { path = "../emutk-vax" }
+emutk-pdp11 = { path = "../emutk-pdp11" }
