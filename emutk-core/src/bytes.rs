@@ -1,3 +1,4 @@
+/// A trait that allows an object to be converted to and from arbitrary endianness bytes.
 pub trait ByteRepr: Sized {
     /// The length of the value in bytes.
     fn byte_len() -> usize;
