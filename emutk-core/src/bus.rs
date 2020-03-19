@@ -2,7 +2,7 @@ use crate::bytes::ByteRepr;
 use std::marker::PhantomData;
 
 
-pub trait Bus<Err> {
+pub trait Bus<Err, I> {
     type Tag;
 
     /// Read a ByteRepr implementing value from the bus at the selected address.
@@ -18,6 +18,8 @@ pub trait Bus<Err> {
     fn write_tagged<T: ByteRepr>(&mut self, addr: usize, data: T, _tag: Self::Tag) -> Result<(), Err> {
         self.write(addr, data)
     }
+
+    fn execute_cycle(&mut self) -> I;
 }
 
 pub trait BusErrorCommon {
@@ -54,7 +56,7 @@ impl<E> RAMROMBusBE<E> {
     }
 }
 
-impl<E: BusErrorCommon> Bus<E> for RAMROMBusBE<E> {
+impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusBE<E> {
     type Tag = ();
 
     fn read<T: ByteRepr>(&mut self, addr: usize) -> Result<T, E> {
@@ -111,6 +113,10 @@ impl<E: BusErrorCommon> Bus<E> for RAMROMBusBE<E> {
             return Ok(());
         }
     }
+    
+    fn execute_cycle(&mut self) -> () {
+        // Do nothing, this bus doesn't do any processing.
+    }
 }
 
 
@@ -131,7 +137,7 @@ impl<E> RAMROMBusLE<E> {
     }
 }
 
-impl<E: BusErrorCommon> Bus<E> for RAMROMBusLE<E> {
+impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusLE<E> {
     type Tag = ();
 
     fn read<T: ByteRepr>(&mut self, addr: usize) -> Result<T, E> {
@@ -187,6 +193,10 @@ impl<E: BusErrorCommon> Bus<E> for RAMROMBusLE<E> {
             };
             return Ok(());
         }
+    }
+
+    fn execute_cycle(&mut self) -> () {
+        // Do nothing, this bus doesn't do any processing.
     }
 }
 

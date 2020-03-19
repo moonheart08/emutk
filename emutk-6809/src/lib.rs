@@ -1,3 +1,5 @@
+pub mod cpu;
+pub mod regfile;
 #[cfg(test)]
 mod tests {
     #[test]
