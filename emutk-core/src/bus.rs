@@ -60,7 +60,7 @@ impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusBE<E> {
     type Tag = ();
 
     fn read<T: ByteRepr>(&mut self, addr: usize) -> Result<T, E> {
-        let len = T::byte_len();
+        let len = T::BYTE_LEN;
 
         if addr + len > u16::MAX as usize {
             return Err(E::out_of_bounds());
@@ -86,7 +86,7 @@ impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusBE<E> {
     }
 
     fn write<T: ByteRepr>(&mut self, addr: usize, data: T) -> Result<(), E> {
-        let len = T::byte_len();
+        let len = T::BYTE_LEN;
         if addr + len > u16::MAX as usize {
             return Err(E::out_of_bounds());
         } else {
@@ -141,7 +141,7 @@ impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusLE<E> {
     type Tag = ();
 
     fn read<T: ByteRepr>(&mut self, addr: usize) -> Result<T, E> {
-        let len = T::byte_len();
+        let len = T::BYTE_LEN;
 
         if addr + len > u16::MAX as usize {
             return Err(E::out_of_bounds());
@@ -167,7 +167,7 @@ impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusLE<E> {
     }
 
     fn write<T: ByteRepr>(&mut self, addr: usize, data: T) -> Result<(), E> {
-        let len = T::byte_len();
+        let len = T::BYTE_LEN;
         if addr + len > u16::MAX as usize {
             return Err(E::out_of_bounds());
         } else {

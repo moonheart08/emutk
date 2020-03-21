@@ -1,7 +1,7 @@
 /// A trait that allows an object to be converted to and from arbitrary endianness bytes.
 pub trait ByteRepr: Sized {
     /// The length of the value in bytes.
-    fn byte_len() -> usize;
+    const BYTE_LEN: usize;
 
     /// Convert little endian bytes into Self.
     /// Returns None if the conversion fails.
@@ -34,10 +34,12 @@ pub trait ByteRepr: Sized {
     fn into_be_bytes(self) -> Vec<u8>;
 }
 
+
+// This is not implemented for usize and isize for sanity reasons.
+
+
 impl ByteRepr for bool {
-    fn byte_len() -> usize {
-        1
-    }
+    const BYTE_LEN: usize = 1;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
@@ -82,9 +84,7 @@ impl ByteRepr for bool {
 
 
 impl ByteRepr for u8 {
-    fn byte_len() -> usize {
-        1
-    }
+    const BYTE_LEN: usize = 1;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
@@ -128,9 +128,7 @@ impl ByteRepr for u8 {
 }
 
 impl ByteRepr for i8 {
-    fn byte_len() -> usize {
-        1
-    }
+    const BYTE_LEN: usize = 1;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
@@ -174,9 +172,7 @@ impl ByteRepr for i8 {
 }
 
 impl ByteRepr for u16 {
-    fn byte_len() -> usize {
-        2
-    }
+    const BYTE_LEN: usize = 2;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 1 {
@@ -226,9 +222,7 @@ impl ByteRepr for u16 {
 }
 
 impl ByteRepr for i16 {
-    fn byte_len() -> usize {
-        2
-    }
+    const BYTE_LEN: usize = 2;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 1 {
@@ -278,9 +272,7 @@ impl ByteRepr for i16 {
 }
 
 impl ByteRepr for u32 {
-    fn byte_len() -> usize {
-        4
-    }
+    const BYTE_LEN: usize = 4;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
@@ -330,9 +322,7 @@ impl ByteRepr for u32 {
 }
 
 impl ByteRepr for i32 {
-    fn byte_len() -> usize {
-        4
-    }
+    const BYTE_LEN: usize = 4;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
@@ -382,9 +372,7 @@ impl ByteRepr for i32 {
 }
 
 impl ByteRepr for f32 {
-    fn byte_len() -> usize {
-        4
-    }
+    const BYTE_LEN: usize = 4;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
@@ -434,9 +422,7 @@ impl ByteRepr for f32 {
 }
 
 impl ByteRepr for u64 {
-    fn byte_len() -> usize {
-        8
-    }
+    const BYTE_LEN: usize = 8;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
@@ -486,9 +472,7 @@ impl ByteRepr for u64 {
 }
 
 impl ByteRepr for i64 {
-    fn byte_len() -> usize {
-        8
-    }
+    const BYTE_LEN: usize = 8;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
@@ -538,9 +522,7 @@ impl ByteRepr for i64 {
 }
 
 impl ByteRepr for f64 {
-    fn byte_len() -> usize {
-        8
-    }
+    const BYTE_LEN: usize = 8;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
@@ -590,9 +572,7 @@ impl ByteRepr for f64 {
 }
 
 impl ByteRepr for u128 {
-    fn byte_len() -> usize {
-        16
-    }
+    const BYTE_LEN: usize = 16;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 15 {
@@ -642,9 +622,7 @@ impl ByteRepr for u128 {
 }
 
 impl ByteRepr for i128 {
-    fn byte_len() -> usize {
-        16
-    }
+    const BYTE_LEN: usize = 16;
 
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 15 {
@@ -692,3 +670,4 @@ impl ByteRepr for i128 {
         self.to_le_bytes().to_vec()
     }
 }
+
