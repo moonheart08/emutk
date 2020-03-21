@@ -1,4 +1,4 @@
-pub trait Splitable<T: Sized + Copy + Clone>: Sized + Copy + Clone {
+pub trait Splitable<T: Sized + Copy + Clone + Default>: Sized + Copy + Clone + private::Sealed {
     fn split_le(self) -> [T; 2];
     fn join_le(halves: [T; 2]) -> Self;
 
@@ -28,6 +28,11 @@ pub trait Splitable<T: Sized + Copy + Clone>: Sized + Copy + Clone {
         old[0] = val;
         Self::join_be(old)
     }
+
+    fn swap_halves(self) -> Self {
+        let mut old = self.split_le();
+        Self::join_be(old) // Endianness magic trick
+    }
 }
 
 impl Splitable<u8> for u16 {
@@ -49,3 +54,12 @@ impl Splitable<u8> for u16 {
 }
 
 //TODO: Implement for u32, u64, and u128. Figure out how to make it "sealed" so it can't be implemented by others.
+
+mod private {
+    pub trait Sealed {}
+
+    impl Sealed for u16 {}
+    impl Sealed for u32 {}
+    impl Sealed for u64 {}
+    impl Sealed for u128 {}
+}
