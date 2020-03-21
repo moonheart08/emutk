@@ -10,7 +10,7 @@ pub struct Motorola6809<B>
     where B: Bus<SimpleBusError, ()>
 {
     regs: RegisterFile,
-    halted: bool,
+    _halted: bool,
 
     bus: B,
 }
@@ -25,8 +25,8 @@ impl<B> Motorola6809<B>
         (addr, val)
     }
 
-    pub fn test_and_set_flags(&mut self, overflow: bool, carry: bool) {
-        
+    pub fn test_and_set_flags(&mut self, _overflow: bool, _carry: bool) {
+        unimplemented!()
     }
 
     pub fn execute_instruction(&mut self) {
@@ -38,7 +38,7 @@ impl<B> Motorola6809<B>
             // NEG direct
             0x00 => {
                 let (addr, val) = self.read_direct_argument::<u16>(pc);
-                let (val, c) = (val as i16).overflowing_neg();
+                let (val, _) = (val as i16).overflowing_neg();
                 let _ = self.bus.write(addr as usize, val as u16);
             },
 

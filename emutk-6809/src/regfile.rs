@@ -21,7 +21,7 @@ pub struct RegisterFile {
 }
 
 impl RegisterFile {
-    fn new() -> RegisterFile {
+    pub fn new() -> RegisterFile {
         RegisterFile {
             x: 0,
             y: 0,

@@ -30,7 +30,7 @@ pub trait Splitable<T: Sized + Copy + Clone + Default>: Sized + Copy + Clone + p
     }
 
     fn swap_halves(self) -> Self {
-        let mut old = self.split_le();
+        let old = self.split_le();
         Self::join_be(old) // Endianness magic trick
     }
 }
