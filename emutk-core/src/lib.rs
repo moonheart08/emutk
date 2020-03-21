@@ -2,6 +2,7 @@ pub mod bus;
 pub mod bytes;
 pub mod split;
 pub mod emumath;
+pub mod flags;
 
 pub use bus::Bus;
 pub use bytes::ByteRepr;
