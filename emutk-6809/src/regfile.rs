@@ -1,5 +1,7 @@
-use emutk_core::split::Splitable;
-
+use emutk_core::{
+    split::Splitable,
+    flags
+};
 pub const FLAG_CARRY: u8      = 0b0000_0001;
 pub const FLAG_OVERFLOW: u8   = 0b0000_0010;
 pub const FLAG_ZERO: u8       = 0b0000_0100;
@@ -9,6 +11,21 @@ pub const FLAG_HALF_CARRY: u8 = 0b0010_0000;
 pub const FLAG_FIRQ_MASK: u8  = 0b0100_0000;
 pub const FLAG_ENTIRE: u8     = 0b1000_0000;
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct CPUFlags(u8);
+
+impl CPUFlags {
+    pub fn test_flag(&self, flag: u8) -> bool {
+        (self.0 & flag) != 0
+    }
+
+    pub fn set_flag(&mut self, flag: u8, val: bool) {
+        let mask = !flag;
+        self.0 &= mask;
+        self.0 |= flag * val as u8; // magic! only resets the flag is val is true.
+    }
+}
+
 pub struct RegisterFile {
     x: u16,
     y: u16,
@@ -17,7 +34,7 @@ pub struct RegisterFile {
     pc: u16,
     d: u16,
     dp: u8,
-    flags: u8,
+    flags: CPUFlags,
 }
 
 impl RegisterFile {
@@ -30,7 +47,7 @@ impl RegisterFile {
             pc: 0,
             d: 0,
             dp: 0,
-            flags: 0,
+            flags: CPUFlags(0),
         }
     }
 }
@@ -72,12 +89,12 @@ impl RegisterFile {
         self.dp
     }
 
-    pub fn get_flags(&self) -> u8 {
+    pub fn get_flags(&self) -> CPUFlags {
         self.flags
     }
 
     pub fn test_flag(&self, flag: u8) -> bool {
-        (self.flags & flag) != 0
+        self.flags.test_flag(flag)
     }
 }
 
@@ -118,21 +135,54 @@ impl RegisterFile {
         self.dp = val;
     }
 
-    pub fn set_flags(&mut self, val: u8) {
+    pub fn set_flags(&mut self, val: CPUFlags) {
         self.flags = val;
     }
 
-    pub fn set_flag(&mut self, flag: u8) {
-        let mask = !flag;
-        self.flags &= mask;
-        self.flags |= flag;
+    pub fn set_flag(&mut self, flag: u8, val: bool) {
+        self.flags.set_flag(flag, val)
     }
+
 }
 
 impl RegisterFile {
     pub fn get_dp_addr(&self, lower: u8) -> u16 {
         u16::from_be_bytes([lower, self.dp])
     }
+}
+
+impl flags::CarryFlagData for CPUFlags {
+    fn get_carry_u4(&self) -> bool {
+        self.test_flag(FLAG_HALF_CARRY)
+    }
+
+    fn get_carry_u8(&self) -> bool {
+        self.test_flag(FLAG_CARRY)
+    }
+
+    fn get_carry_u16(&self) -> bool {
+        self.test_flag(FLAG_CARRY)
+    }
+
+    fn get_carry_u32(&self) -> bool { unimplemented!() }
+    fn get_carry_u64(&self) -> bool { unimplemented!() }
+    fn get_carry_u128(&self) -> bool { unimplemented!() }
+   
+    fn set_carry_u4(&mut self, val: bool) {
+        self.set_flag(FLAG_HALF_CARRY, val)
+    }
+    
+    fn set_carry_u8(&mut self, val: bool) {
+        self.set_flag(FLAG_CARRY, val)
+    }
+    
+    fn set_carry_u16(&mut self, val: bool) {
+        self.set_flag(FLAG_CARRY, val)
+    }
+
+    fn set_carry_u32(&mut self, _: bool) { unimplemented!() }
+    fn set_carry_u64(&mut self, _: bool) { unimplemented!() }
+    fn set_carry_u128(&mut self, _: bool) { unimplemented!() }
 }
 
 #[cfg(tests)]
