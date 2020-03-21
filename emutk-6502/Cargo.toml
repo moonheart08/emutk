@@ -1,5 +1,5 @@
 [package]
-name = "emutk"
+name = "emutk-6502"
 version = "0.1.0"
 authors = ["moonheart08 <moonheart08@users.noreply.github.com>"]
 edition = "2018"
@@ -8,6 +8,3 @@ edition = "2018"
 
 [dependencies]
 emutk-core = { path = "../emutk-core" }
-emutk-6809 = { path = "../emutk-6809" }
-emutk-6502 = { path = "../emutk-6502" }
-emutk-pdp11 = { path = "../emutk-pdp11" }
