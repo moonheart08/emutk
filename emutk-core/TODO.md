@@ -1,1 +1,0 @@
-Implement ByteRepr for tuples and arrays where T implements ByteRepr.
