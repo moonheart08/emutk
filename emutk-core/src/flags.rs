@@ -207,3 +207,15 @@ pub trait ReducedSignFlagData: SignFlagData {
     /// Set the sign flag.
     fn set_sign(&mut self, val: bool);
 }
+
+/// Marker trait implemented by all types that have carry, overflow, sign, and zero flags.
+pub trait OCZSFlagData {}
+
+impl<T> OCZSFlagData for T
+    where T: CarryFlagData + OverflowFlagData + SignFlagData + ZeroFlagData {}
+
+/// Marker trait implemented by all types that have the reduced API for carry, overflow, sign, and zero flags.
+pub trait ReducedOCZSFlagData {}
+
+impl<T> ReducedOCZSFlagData for T
+    where T: ReducedCarryFlagData + ReducedOverflowFlagData + ReducedSignFlagData + ReducedZeroFlagData {}
