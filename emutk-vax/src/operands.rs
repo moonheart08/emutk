@@ -1,3 +1,4 @@
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum OperandMode {
     Literal(u8), // 0..=3
     Indexed(u8), // 4
@@ -15,7 +16,6 @@ pub enum OperandMode {
     WordDisplacementDeferred(u8), // 13
     LongwordDisplacement(u8), // 14
     LongwordDisplacementDeferred(u8), // 15
-
 }
 
 impl OperandMode {
