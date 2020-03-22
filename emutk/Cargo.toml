@@ -10,4 +10,4 @@ edition = "2018"
 emutk-core = { path = "../emutk-core" }
 emutk-6809 = { path = "../emutk-6809" }
 emutk-6502 = { path = "../emutk-6502" }
-emutk-pdp11 = { path = "../emutk-pdp11" }
+emutk-vax = { path = "../emutk-vax" }

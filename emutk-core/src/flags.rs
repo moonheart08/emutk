@@ -310,18 +310,18 @@ impl<T> SignFlagData for T
 }
 
 /// Marker trait implemented by all types that have carry, overflow, sign, and zero flags.
-pub trait OCZSFlagData {}
+pub trait OCZSFlagData: CarryFlagData + OverflowFlagData + SignFlagData + ZeroFlagData {}
 
 impl<T> OCZSFlagData for T
     where T: CarryFlagData + OverflowFlagData + SignFlagData + ZeroFlagData {}
 
 /// Marker trait implemented by all types that have the reduced API for overflow, sign, and zero flags.
-pub trait ReducedOZSFlagData {}
+pub trait ReducedOZSFlagData: CarryFlagData + ReducedOverflowFlagData + ReducedSignFlagData + ReducedZeroFlagData {}
 
 impl<T> ReducedOZSFlagData for T
-    where T: ReducedOverflowFlagData + ReducedSignFlagData + ReducedZeroFlagData {}
+    where T: CarryFlagData +  ReducedOverflowFlagData + ReducedSignFlagData + ReducedZeroFlagData {}
 /// Marker trait implemented by all types that have the reduced API for carry, overflow, sign, and zero flags.
-pub trait ReducedOCZSFlagData {}
+pub trait ReducedOCZSFlagData: ReducedCarryFlagData + ReducedOZSFlagData {}
 
 impl<T> ReducedOCZSFlagData for T
     where T: ReducedCarryFlagData + ReducedOZSFlagData {}

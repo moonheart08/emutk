@@ -164,9 +164,15 @@ impl flags::CarryFlagData for CPUFlags {
         self.test_flag(FLAG_CARRY)
     }
 
-    fn get_carry_u32(&self) -> bool { unimplemented!() }
-    fn get_carry_u64(&self) -> bool { unimplemented!() }
-    fn get_carry_u128(&self) -> bool { unimplemented!() }
+    fn get_carry_u32(&self) -> bool { 
+        self.test_flag(FLAG_CARRY)
+    }
+    fn get_carry_u64(&self) -> bool { 
+        self.test_flag(FLAG_CARRY)
+    }
+    fn get_carry_u128(&self) -> bool { 
+        self.test_flag(FLAG_CARRY)
+    }
    
     fn set_carry_u4(&mut self, val: bool) {
         self.set_flag(FLAG_HALF_CARRY, val)
@@ -180,9 +186,47 @@ impl flags::CarryFlagData for CPUFlags {
         self.set_flag(FLAG_CARRY, val)
     }
 
-    fn set_carry_u32(&mut self, _: bool) { unimplemented!() }
-    fn set_carry_u64(&mut self, _: bool) { unimplemented!() }
-    fn set_carry_u128(&mut self, _: bool) { unimplemented!() }
+    fn set_carry_u32(&mut self, val: bool) { 
+        self.set_flag(FLAG_CARRY, val)
+    }
+
+    fn set_carry_u64(&mut self, val: bool) {  
+        self.set_flag(FLAG_CARRY, val)
+    }
+    
+    fn set_carry_u128(&mut self, val: bool) { 
+        self.set_flag(FLAG_CARRY, val)
+    }
+}
+
+impl flags::ReducedOverflowFlagData for CPUFlags {
+    fn get_overflow(&self) -> bool {
+        self.test_flag(FLAG_OVERFLOW)
+    }
+
+    fn set_overflow(&mut self, val: bool) {
+        self.set_flag(FLAG_OVERFLOW, val)
+    }
+}
+
+impl flags::ReducedZeroFlagData for CPUFlags {
+    fn get_zero(&self) -> bool {
+        self.test_flag(FLAG_OVERFLOW)
+    }
+
+    fn set_zero(&mut self, val: bool) {
+        self.set_flag(FLAG_OVERFLOW, val)
+    }
+}
+
+impl flags::ReducedSignFlagData for CPUFlags {
+    fn get_sign(&self) -> bool {
+        self.test_flag(FLAG_NEGATIVE)
+    }
+
+    fn set_sign(&mut self, val: bool) {
+        self.set_flag(FLAG_NEGATIVE, val)
+    }
 }
 
 #[cfg(tests)]
