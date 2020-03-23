@@ -1,3 +1,4 @@
+use std::num::NonZeroUsize;
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum OperandMode {
     Literal(u8), // 0..=3
@@ -40,6 +41,29 @@ impl OperandMode {
             16..=u8::MAX => unreachable!(),
         }
     }
+
+    #[inline] // Optimizes to a table lookup. With LTO enabled, should inline well.
+    pub fn byte_size(self) -> Option<NonZeroUsize> {
+        use OperandMode::*;
+        match self {
+            Literal(_) | Register(_) | RegisterDeferred(_) |
+            Autodecrement(_) | Autoincrement(_) | AutoincrementDeferred(_) =>
+                NonZeroUsize::new(1), // returns an Option. always Some.
+            Immediate() | Absolute() =>
+                NonZeroUsize::new(1), // Not a lie. These two are PC relative operations, they just modify PC
+                                      // mid execution.
+            ByteDisplacement(_) | ByteDisplacementDeferred(_) =>
+                NonZeroUsize::new(2),
+            WordDisplacement(_) | WordDisplacementDeferred(_) =>
+                NonZeroUsize::new(3),
+            LongwordDisplacement(_) | LongwordDisplacementDeferred(_) =>
+                NonZeroUsize::new(5),
+            
+            Indexed(_) => None, // Cannot calculate size without child operand.
+        }
+    }
+
+    
 }
 
 mod tests {
