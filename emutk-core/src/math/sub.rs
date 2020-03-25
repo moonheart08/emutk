@@ -13,8 +13,8 @@ impl<T: OCZSFlagData> FlaggedSub<T> for u8 {
     fn flagged_sub(self, other: Self, mut flags: T) -> (Self::Output, T) {
         let (val, carry) = self.overflowing_sub(other);
         let (_, overflow) = (self as i8).overflowing_sub(other as i8);
-        let half_carry = (((self & 0xf).wrapping_sub(other & 0xf)) & 0x10) == 0x10; // half carry magic
-        let half_overflow = (((self & 0x7).wrapping_sub(other & 0x7)) & 0x8) == 0x8; // half overflow magic
+        let half_carry = ((((self & 0xf) | 0x10).wrapping_sub(other & 0xf)) & 0x10) == 0x0; // half carry magic
+        let half_overflow = ((((self & 0x7) | 0x8).wrapping_sub(other & 0x7)) & 0x8) == 0x0; // half overflow magic
         flags.set_carry_u4(half_carry);
         flags.set_overflow_u4(half_overflow);
 

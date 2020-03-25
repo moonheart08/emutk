@@ -62,12 +62,4 @@ impl OperandMode {
             Indexed(_) => None, // Cannot calculate size without child operand.
         }
     }
-
-    
-}
-
-mod tests {
-    use super::*;
-
-    
 }

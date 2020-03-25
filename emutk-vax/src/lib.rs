@@ -1,5 +1,8 @@
 pub mod operands;
 pub mod instructiontypes;
+pub mod cpu;
+pub mod bus;
+pub mod mmu;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(u8)]

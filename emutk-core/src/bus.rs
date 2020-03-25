@@ -43,6 +43,7 @@ impl BusErrorCommon for SimpleBusError {
 pub struct RAMROMBusBE<Err> {
     ram: Vec<u8>,
     rom: Vec<u8>,
+    #[doc(hidden)]
     __err: std::marker::PhantomData<Err>,
 }
 
@@ -54,6 +55,14 @@ impl<E> RAMROMBusBE<E> {
             __err: PhantomData,
         }
     }
+}
+
+// Magic algorithm will document later.
+pub fn get_page_split_data(bytes: usize, base_addr: usize, page_0_end: usize) -> (usize, usize) {
+    let adj_addr = page_0_end - base_addr;
+    assert!(bytes > adj_addr);
+
+    unimplemented!()
 }
 
 impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusBE<E> {
@@ -210,5 +219,14 @@ mod tests {
         assert_eq!(bus.write::<u32>(32766, 0x1234_5678), Ok(()));
 
         assert_eq!(bus.read::<u32>(32766), Ok(0x1234_5678));
+    }
+
+    #[test]
+    fn check_before_ramrom_bus_boundaries() {
+        let mut bus: RAMROMBusLE<SimpleBusError> = RAMROMBusLE::<SimpleBusError>::new(); 
+
+        assert_eq!(bus.write::<u32>(32764, 0x1234_5678), Ok(()));
+
+        assert_eq!(bus.read::<u32>(32764), Ok(0x1234_5678));
     }
 }

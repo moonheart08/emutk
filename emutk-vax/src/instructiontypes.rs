@@ -1,5 +1,5 @@
 use num_derive::*;
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::{FromPrimitive};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 #[repr(u16)]
