@@ -697,13 +697,13 @@ impl ByteRepr for u128 {
     #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
-        dest[..8].copy_from_slice(&bytes);
+        dest[..16].copy_from_slice(&bytes);
     }
 
     #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
-        dest[..8].copy_from_slice(&bytes);
+        dest[..16].copy_from_slice(&bytes);
     }
 
     #[inline]
@@ -755,13 +755,13 @@ impl ByteRepr for i128 {
     #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
-        dest[..8].copy_from_slice(&bytes);
+        dest[..16].copy_from_slice(&bytes);
     }
 
     #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
-        dest[..8].copy_from_slice(&bytes);
+        dest[..16].copy_from_slice(&bytes);
     }
 
     #[inline]
