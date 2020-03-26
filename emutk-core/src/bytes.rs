@@ -1,3 +1,5 @@
+use std::num::Wrapping;
+
 /// A trait that allows an object to be converted to and from arbitrary endianness bytes.
 pub trait ByteRepr: Sized {
     /// The length of the value in bytes.
@@ -34,9 +36,121 @@ pub trait ByteRepr: Sized {
     fn into_be_bytes(self) -> Vec<u8>;
 }
 
+impl ByteRepr for usize {
+    const BYTE_LEN: usize = std::mem::size_of::<usize>();
 
-// This is not implemented for usize and isize for sanity reasons.
+    #[inline]
+    fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
+        if b.len() >= Self::BYTE_LEN {
+            Some(<Self as ByteRepr>::from_le_bytes(b))
+        } else {
+            None
+        }
+    }
 
+    #[inline]
+    fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
+        if b.len() >= Self::BYTE_LEN {
+            Some(<Self as ByteRepr>::from_be_bytes(b))
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn from_le_bytes(b: &[u8]) -> Self {
+        let mut boilerplate: [u8; Self::BYTE_LEN] = [0; Self::BYTE_LEN];
+        boilerplate.copy_from_slice(b);
+        usize::from_le_bytes(boilerplate)
+    }
+
+    #[inline]
+    fn from_be_bytes(b: &[u8]) -> Self {
+        let mut boilerplate: [u8; Self::BYTE_LEN] = [0; Self::BYTE_LEN];
+        boilerplate.copy_from_slice(b);
+        usize::from_be_bytes(boilerplate)
+    }
+
+    #[inline]
+    fn copy_into_le_bytes(self, dest: &mut [u8]) {
+        let bytes = self.to_le_bytes();
+        dest[..Self::BYTE_LEN].copy_from_slice(&bytes);
+    }
+
+    #[inline]
+    fn copy_into_be_bytes(self, dest: &mut [u8]) {
+        let bytes = self.to_be_bytes();
+        dest[..Self::BYTE_LEN].copy_from_slice(&bytes);
+    }
+
+    #[inline]
+    fn into_be_bytes(self) -> Vec<u8> {
+        self.to_be_bytes().to_vec()
+    }
+
+    #[inline]
+    fn into_le_bytes(self) -> Vec<u8> {
+        self.to_le_bytes().to_vec()
+    }
+}
+
+impl ByteRepr for isize {
+    const BYTE_LEN: usize = std::mem::size_of::<isize>();
+
+    #[inline]
+    fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
+        if b.len() >= Self::BYTE_LEN {
+            Some(<Self as ByteRepr>::from_le_bytes(b))
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
+        if b.len() >= Self::BYTE_LEN {
+            Some(<Self as ByteRepr>::from_be_bytes(b))
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    fn from_le_bytes(b: &[u8]) -> Self {
+        let mut boilerplate: [u8; Self::BYTE_LEN] = [0; Self::BYTE_LEN];
+        boilerplate.copy_from_slice(b);
+        isize::from_le_bytes(boilerplate)
+    }
+
+    #[inline]
+    fn from_be_bytes(b: &[u8]) -> Self {
+        let mut boilerplate: [u8; Self::BYTE_LEN] = [0; Self::BYTE_LEN];
+        boilerplate.copy_from_slice(b);
+        isize::from_be_bytes(boilerplate)
+    }
+
+    #[inline]
+    fn copy_into_le_bytes(self, dest: &mut [u8]) {
+        let bytes = self.to_le_bytes();
+        dest[..Self::BYTE_LEN].copy_from_slice(&bytes);
+    }
+
+    #[inline]
+    fn copy_into_be_bytes(self, dest: &mut [u8]) {
+        let bytes = self.to_be_bytes();
+        dest[..Self::BYTE_LEN].copy_from_slice(&bytes);
+    }
+
+    #[inline]
+    fn into_be_bytes(self) -> Vec<u8> {
+        self.to_be_bytes().to_vec()
+    }
+
+    #[inline]
+    fn into_le_bytes(self) -> Vec<u8> {
+        self.to_le_bytes().to_vec()
+    }
+}
 
 impl ByteRepr for bool {
     const BYTE_LEN: usize = 1;
@@ -772,6 +886,55 @@ impl ByteRepr for i128 {
     #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
+    }
+}
+
+impl<T: ByteRepr> ByteRepr for Wrapping<T> {
+    const BYTE_LEN: usize = T::BYTE_LEN;
+    #[inline]
+    fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
+        match T::try_from_le_bytes(b) {
+            Some(v) => Some(Wrapping(v)),
+            None => None,
+        }
+    }
+
+    #[inline]
+    fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
+        match T::try_from_be_bytes(b) {
+            Some(v) => Some(Wrapping(v)),
+            None => None,
+        }
+    }
+
+    #[inline]
+    fn from_le_bytes(b: &[u8]) -> Self {
+        Wrapping(<T as ByteRepr>::from_le_bytes(b))
+    }
+
+    #[inline]
+    fn from_be_bytes(b: &[u8]) -> Self {
+        Wrapping(<T as ByteRepr>::from_be_bytes(b))
+    }
+
+    #[inline]
+    fn copy_into_le_bytes(self, dest: &mut [u8]) {
+        self.0.copy_into_le_bytes(dest);
+    }
+
+    #[inline]
+    fn copy_into_be_bytes(self, dest: &mut [u8]) {
+        self.0.copy_into_be_bytes(dest);
+    }
+
+    #[inline]
+    fn into_be_bytes(self) -> Vec<u8> {
+        self.0.into_be_bytes()
+    }
+
+    #[inline]
+    fn into_le_bytes(self) -> Vec<u8> {
+        self.0.into_le_bytes()
     }
 }
 
