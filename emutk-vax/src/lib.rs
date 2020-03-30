@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 pub mod operands;
 pub mod instructiontypes;
 pub mod cpu;
@@ -7,11 +10,11 @@ pub mod mmu;
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum DataSize {
-    Byte     = 1, // 8b
-    Word     = 2, // 16b
-    Longword = 3, // 32b
-    Quadword = 4, // 64b
-    Octaword = 5, // 128b
+    Byte     = 0, // 8b
+    Word     = 1, // 16b
+    Longword = 2, // 32b
+    Quadword = 3, // 64b
+    Octaword = 4, // 128b
 }
 
 impl DataSize {

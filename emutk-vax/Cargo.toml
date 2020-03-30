@@ -10,8 +10,16 @@ edition = "2018"
 num = "^0.2"
 num-traits = "^0.2"
 num-derive = "^0.3"
+bytemuck = "^1.2"
 emutk-core = { path = "../emutk-core" }
 
 [profile.release]
 lto = true
 opt-level = 3
+codegen-units = 1
+
+[profile.bench]
+lto = true
+opt-level = 3
+codegen-units = 1
+incremental = false

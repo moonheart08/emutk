@@ -1,5 +1,5 @@
 use num_derive::*;
-use num_traits::{FromPrimitive};
+use num_traits::{ToPrimitive, FromPrimitive};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 #[repr(u16)]
@@ -376,23 +376,25 @@ pub enum InstructionType {
 }
 
 impl InstructionType {
-    #[inline]
-    pub fn from_instrid<I>(bytes: &mut I) -> Option<Self> 
-        where I: Iterator<Item = u8>
+    
+    pub fn from_instrid(bytes: [u8; 2]) -> Option<Self> 
     {
-        if let Some(b) = bytes.next() {
-            match b {
-                0xFD | 0xFE | 0xFF => {
-                    if let Some(c) = bytes.next() {
-                        InstructionType::from_u16(u16::from_le_bytes([b,c]))
-                    } else {
-                        None
-                    }
-                }
-                v => InstructionType::from_u8(v),
+        match bytes[0] {
+            0xFD | 0xFE | 0xFF => {
+                InstructionType::from_u16(u16::from_le_bytes(bytes))
             }
-        } else {
-            None
+            v => InstructionType::from_u8(v),
         }
     }
+
+    #[inline]
+    pub fn instr_len(self) -> usize {
+        let dat = self.to_u16().unwrap();
+        if (dat & 0xFF00) != 0 {
+            2
+        } else {
+            1
+        }
+    }
+
 }

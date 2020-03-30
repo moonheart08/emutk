@@ -7,9 +7,5 @@ pub use emutk_core::bus::{
     BusError,
 };
 
-pub use emutk_core::bytes::{
-    pod_is_le,
-    pod_is_be,
-};
-
+pub use emutk_core::bytes::*;
 pub use emutk_core::cycles::Cycles;
