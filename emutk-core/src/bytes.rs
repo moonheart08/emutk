@@ -1,4 +1,9 @@
 use std::num::Wrapping;
+use std::mem::{
+    MaybeUninit,
+    transmute,
+    transmute_copy,
+};
 
 /// A trait that allows an object to be converted to and from arbitrary endianness bytes.
 pub trait ByteRepr: Sized {
@@ -280,6 +285,7 @@ impl ByteRepr for i8 {
 impl ByteRepr for u16 {
     const BYTE_LEN: usize = 2;
 
+    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 1 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -288,6 +294,7 @@ impl ByteRepr for u16 {
         }
     }
 
+    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 1 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -296,23 +303,27 @@ impl ByteRepr for u16 {
         }
     }
 
+    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 2] = [0; 2];
         boilerplate.copy_from_slice(b);
         u16::from_le_bytes(boilerplate)
     }
 
+    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 2] = [0; 2];
         boilerplate.copy_from_slice(b);
         u16::from_be_bytes(boilerplate)
     }
 
+    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..2].copy_from_slice(&bytes);
     }
 
+    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..2].copy_from_slice(&bytes);
@@ -830,7 +841,7 @@ impl<T: ByteRepr> ByteRepr for Wrapping<T> {
 macro_rules! gen_byterepr_impls_array {
     ($($arrlen:literal)+) => {
         $(
-            impl<T: ByteRepr + Default + Copy> ByteRepr for [T; $arrlen] {
+            impl<T: ByteRepr + Copy> ByteRepr for [T; $arrlen] {
                 const BYTE_LEN: usize = T::BYTE_LEN * $arrlen;
             
                 fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
@@ -849,29 +860,32 @@ macro_rules! gen_byterepr_impls_array {
                     }
                 }
             
-                
                 fn from_le_bytes(b: &[u8]) -> Self {
-                    let mut out: [T; $arrlen] = Default::default();
+                    let mut out: [MaybeUninit<T>; $arrlen] = unsafe {
+                        MaybeUninit::uninit().assume_init()
+                    };
             
                     for i in 0..(out.len()) {
                         let val_start = T::BYTE_LEN * i;
                         let val_end = val_start + T::BYTE_LEN;
-                        out[i] = T::from_le_bytes(&b[val_start..val_end]);
+                        out[i] = MaybeUninit::new(T::from_le_bytes(&b[val_start..val_end]));
                     }
             
-                    out
+                    unsafe { transmute_copy::<_, [T; $arrlen]>(&out) }
                 }
             
                 fn from_be_bytes(b: &[u8]) -> Self {
-                    let mut out: [T; $arrlen] = Default::default();
+                    let mut out: [MaybeUninit<T>; $arrlen] = unsafe {
+                        MaybeUninit::uninit().assume_init()
+                    };
             
                     for i in 0..(out.len()) {
                         let val_start = T::BYTE_LEN * i;
                         let val_end = val_start + T::BYTE_LEN;
-                        out[i] = T::from_be_bytes(&b[val_start..val_end]);
+                        out[i] = MaybeUninit::new(T::from_be_bytes(&b[val_start..val_end]));
                     }
             
-                    out
+                    unsafe { transmute_copy::<_, [T; $arrlen]>(&out) }
                 }
             
                 fn copy_into_le_bytes(self, dest: &mut [u8]) {
@@ -923,7 +937,7 @@ macro_rules! gen_byterepr_impls_tuple {
     )+) => {
         $(
             // ByteRepr mandates Sized
-            impl<$($T:ByteRepr + Default),+> ByteRepr for ($($T,)+) {
+            impl<$($T:ByteRepr),+> ByteRepr for ($($T,)+) {
                 const BYTE_LEN: usize = $($T::BYTE_LEN +)+ 0;
 
                 fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
@@ -945,25 +959,25 @@ macro_rules! gen_byterepr_impls_tuple {
                 #[allow(unused_assignments)]
                 fn from_le_bytes(b: &[u8]) -> Self {
                     let mut pos = 0;
-                    let mut tup: ($($T,)+)  = ($($T::default(),)+);
+                    let mut tup: ($(MaybeUninit<$T>,)+)  = unsafe { MaybeUninit::uninit().assume_init() };
                     $(
-                        tup.$idx = $T::from_le_bytes(&b[pos..(pos + $T::BYTE_LEN)]);
+                        tup.$idx = MaybeUninit::new($T::from_le_bytes(&b[pos..(pos + $T::BYTE_LEN)]));
                         pos += $T::BYTE_LEN;
                     )+
 
-                    tup
+                    unsafe { transmute_copy::<_, ($($T,)+)>(&tup) }
                 }
 
                 #[allow(unused_assignments)]
                 fn from_be_bytes(b: &[u8]) -> Self {
                     let mut pos = 0;
-                    let mut tup: ($($T,)+)  = ($($T::default(),)+);
+                    let mut tup: ($(MaybeUninit<$T>,)+)  = unsafe { MaybeUninit::uninit().assume_init() };
                     $(
-                        tup.$idx = $T::from_be_bytes(&b[pos..(pos + $T::BYTE_LEN)]);
+                        tup.$idx = MaybeUninit::new($T::from_be_bytes(&b[pos..(pos + $T::BYTE_LEN)]));
                         pos += $T::BYTE_LEN;
                     )+
 
-                    tup
+                    unsafe { transmute_copy::<_, ($($T,)+)>(&tup) }
                 }
 
                 #[allow(unused_assignments)]
