@@ -376,7 +376,6 @@ pub enum InstructionType {
 }
 
 impl InstructionType {
-    
     pub fn from_instrid(bytes: [u8; 2]) -> Option<Self> 
     {
         match bytes[0] {
@@ -387,7 +386,6 @@ impl InstructionType {
         }
     }
 
-    #[inline]
     pub fn instr_len(self) -> usize {
         let dat = self.to_u16().unwrap();
         if (dat & 0xFF00) != 0 {

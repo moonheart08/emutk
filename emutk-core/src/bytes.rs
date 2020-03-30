@@ -39,7 +39,6 @@ pub trait ByteRepr: Sized {
 impl ByteRepr for usize {
     const BYTE_LEN: usize = std::mem::size_of::<usize>();
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() >= Self::BYTE_LEN {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -48,7 +47,6 @@ impl ByteRepr for usize {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() >= Self::BYTE_LEN {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -57,38 +55,32 @@ impl ByteRepr for usize {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; Self::BYTE_LEN] = [0; Self::BYTE_LEN];
         boilerplate.copy_from_slice(b);
         usize::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; Self::BYTE_LEN] = [0; Self::BYTE_LEN];
         boilerplate.copy_from_slice(b);
         usize::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..Self::BYTE_LEN].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..Self::BYTE_LEN].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -97,7 +89,6 @@ impl ByteRepr for usize {
 impl ByteRepr for isize {
     const BYTE_LEN: usize = std::mem::size_of::<isize>();
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() >= Self::BYTE_LEN {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -106,7 +97,6 @@ impl ByteRepr for isize {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() >= Self::BYTE_LEN {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -115,38 +105,32 @@ impl ByteRepr for isize {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; Self::BYTE_LEN] = [0; Self::BYTE_LEN];
         boilerplate.copy_from_slice(b);
         isize::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; Self::BYTE_LEN] = [0; Self::BYTE_LEN];
         boilerplate.copy_from_slice(b);
         isize::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..Self::BYTE_LEN].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..Self::BYTE_LEN].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -155,7 +139,6 @@ impl ByteRepr for isize {
 impl ByteRepr for bool {
     const BYTE_LEN: usize = 1;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
             Some(*v != 0)
@@ -164,7 +147,6 @@ impl ByteRepr for bool {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
             Some(*v != 0)
@@ -173,32 +155,26 @@ impl ByteRepr for bool {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         b[0] != 0
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         b[0] != 0
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         dest[0] = self as u8;
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         dest[0] = self as u8;
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         vec![self as u8]
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         vec![self as u8]
     }
@@ -208,7 +184,6 @@ impl ByteRepr for bool {
 impl ByteRepr for u8 {
     const BYTE_LEN: usize = 1;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
             Some(*v)
@@ -217,7 +192,6 @@ impl ByteRepr for u8 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
             Some(*v)
@@ -226,32 +200,26 @@ impl ByteRepr for u8 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         b[0]
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         b[0]
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         dest[0] = self;
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         dest[0] = self;
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         vec![self]
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         vec![self]
     }
@@ -260,7 +228,6 @@ impl ByteRepr for u8 {
 impl ByteRepr for i8 {
     const BYTE_LEN: usize = 1;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
             Some(*v as i8)
@@ -269,7 +236,6 @@ impl ByteRepr for i8 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if let Some(v) = b.get(0) {
             Some(*v as i8)
@@ -278,32 +244,26 @@ impl ByteRepr for i8 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         b[0] as i8
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         b[0] as i8
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         dest[0] = self as u8;
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         dest[0] = self as u8;
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         vec![self as u8]
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         vec![self as u8]
     }
@@ -312,7 +272,6 @@ impl ByteRepr for i8 {
 impl ByteRepr for u16 {
     const BYTE_LEN: usize = 2;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 1 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -321,7 +280,6 @@ impl ByteRepr for u16 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 1 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -330,38 +288,32 @@ impl ByteRepr for u16 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 2] = [0; 2];
         boilerplate.copy_from_slice(b);
         u16::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 2] = [0; 2];
         boilerplate.copy_from_slice(b);
         u16::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..2].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..2].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -370,7 +322,6 @@ impl ByteRepr for u16 {
 impl ByteRepr for i16 {
     const BYTE_LEN: usize = 2;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 1 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -379,7 +330,6 @@ impl ByteRepr for i16 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 1 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -388,38 +338,32 @@ impl ByteRepr for i16 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 2] = [0; 2];
         boilerplate.copy_from_slice(b);
         i16::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 2] = [0; 2];
         boilerplate.copy_from_slice(b);
         i16::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..2].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..2].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -428,7 +372,6 @@ impl ByteRepr for i16 {
 impl ByteRepr for u32 {
     const BYTE_LEN: usize = 4;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -437,7 +380,6 @@ impl ByteRepr for u32 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -446,38 +388,32 @@ impl ByteRepr for u32 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 4] = [0; 4];
         boilerplate.copy_from_slice(b);
         u32::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 4] = [0; 4];
         boilerplate.copy_from_slice(b);
         u32::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..4].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..4].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -486,7 +422,6 @@ impl ByteRepr for u32 {
 impl ByteRepr for i32 {
     const BYTE_LEN: usize = 4;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -495,7 +430,6 @@ impl ByteRepr for i32 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -504,38 +438,32 @@ impl ByteRepr for i32 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 4] = [0; 4];
         boilerplate.copy_from_slice(b);
         i32::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 4] = [0; 4];
         boilerplate.copy_from_slice(b);
         i32::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..4].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..4].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -544,7 +472,6 @@ impl ByteRepr for i32 {
 impl ByteRepr for f32 {
     const BYTE_LEN: usize = 4;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -553,7 +480,6 @@ impl ByteRepr for f32 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 3 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -562,38 +488,32 @@ impl ByteRepr for f32 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 4] = [0; 4];
         boilerplate.copy_from_slice(b);
         f32::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 4] = [0; 4];
         boilerplate.copy_from_slice(b);
         f32::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..4].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..4].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -602,7 +522,6 @@ impl ByteRepr for f32 {
 impl ByteRepr for u64 {
     const BYTE_LEN: usize = 8;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -611,7 +530,6 @@ impl ByteRepr for u64 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -620,38 +538,32 @@ impl ByteRepr for u64 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 8] = [0; 8];
         boilerplate.copy_from_slice(b);
         u64::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 8] = [0; 8];
         boilerplate.copy_from_slice(b);
         u64::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..8].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..8].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -660,7 +572,6 @@ impl ByteRepr for u64 {
 impl ByteRepr for i64 {
     const BYTE_LEN: usize = 8;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -669,7 +580,6 @@ impl ByteRepr for i64 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -678,38 +588,32 @@ impl ByteRepr for i64 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 8] = [0; 8];
         boilerplate.copy_from_slice(b);
         i64::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 8] = [0; 8];
         boilerplate.copy_from_slice(b);
         i64::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..8].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..8].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -718,7 +622,6 @@ impl ByteRepr for i64 {
 impl ByteRepr for f64 {
     const BYTE_LEN: usize = 8;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -727,7 +630,6 @@ impl ByteRepr for f64 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 7 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -736,38 +638,32 @@ impl ByteRepr for f64 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 8] = [0; 8];
         boilerplate.copy_from_slice(b);
         f64::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 8] = [0; 8];
         boilerplate.copy_from_slice(b);
         f64::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..8].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..8].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -776,7 +672,6 @@ impl ByteRepr for f64 {
 impl ByteRepr for u128 {
     const BYTE_LEN: usize = 16;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 15 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -785,7 +680,6 @@ impl ByteRepr for u128 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 15 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -794,38 +688,32 @@ impl ByteRepr for u128 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 16] = [0; 16];
         boilerplate.copy_from_slice(b);
         u128::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 16] = [0; 16];
         boilerplate.copy_from_slice(b);
         u128::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..16].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..16].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -834,7 +722,6 @@ impl ByteRepr for u128 {
 impl ByteRepr for i128 {
     const BYTE_LEN: usize = 16;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 15 {
             Some(<Self as ByteRepr>::from_le_bytes(b))
@@ -843,7 +730,6 @@ impl ByteRepr for i128 {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() > 15 {
             Some(<Self as ByteRepr>::from_be_bytes(b))
@@ -852,38 +738,32 @@ impl ByteRepr for i128 {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 16] = [0; 16];
         boilerplate.copy_from_slice(b);
         i128::from_le_bytes(boilerplate)
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         let mut boilerplate: [u8; 16] = [0; 16];
         boilerplate.copy_from_slice(b);
         i128::from_be_bytes(boilerplate)
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_le_bytes();
         dest[..16].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         let bytes = self.to_be_bytes();
         dest[..16].copy_from_slice(&bytes);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.to_be_bytes().to_vec()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
@@ -891,7 +771,6 @@ impl ByteRepr for i128 {
 
 impl<T: ByteRepr> ByteRepr for Wrapping<T> {
     const BYTE_LEN: usize = T::BYTE_LEN;
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         match T::try_from_le_bytes(b) {
             Some(v) => Some(Wrapping(v)),
@@ -899,7 +778,6 @@ impl<T: ByteRepr> ByteRepr for Wrapping<T> {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         match T::try_from_be_bytes(b) {
             Some(v) => Some(Wrapping(v)),
@@ -907,32 +785,26 @@ impl<T: ByteRepr> ByteRepr for Wrapping<T> {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         Wrapping(<T as ByteRepr>::from_le_bytes(b))
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         Wrapping(<T as ByteRepr>::from_be_bytes(b))
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         self.0.copy_into_le_bytes(dest);
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         self.0.copy_into_be_bytes(dest);
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         self.0.into_be_bytes()
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         self.0.into_le_bytes()
     }
@@ -945,7 +817,6 @@ macro_rules! gen_byterepr_impls_array {
             impl<T: ByteRepr + Default + Copy> ByteRepr for [T; $arrlen] {
                 const BYTE_LEN: usize = T::BYTE_LEN * $arrlen;
             
-                #[inline]
                 fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
                     if b.len() < Self::BYTE_LEN {
                         None
@@ -954,7 +825,6 @@ macro_rules! gen_byterepr_impls_array {
                     }
                 }
             
-                #[inline]
                 fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
                     if b.len() < Self::BYTE_LEN {
                         None
@@ -963,7 +833,6 @@ macro_rules! gen_byterepr_impls_array {
                     }
                 }
             
-                #[inline]
                 fn from_le_bytes(b: &[u8]) -> Self {
                     let mut out: [T; $arrlen] = Default::default();
             
@@ -976,7 +845,6 @@ macro_rules! gen_byterepr_impls_array {
                     out
                 }
             
-                #[inline]
                 fn from_be_bytes(b: &[u8]) -> Self {
                     let mut out: [T; $arrlen] = Default::default();
             
@@ -989,7 +857,6 @@ macro_rules! gen_byterepr_impls_array {
                     out
                 }
             
-                #[inline]
                 fn copy_into_le_bytes(self, dest: &mut [u8]) {
                     assert!(dest.len() >= Self::BYTE_LEN);
             
@@ -1000,7 +867,6 @@ macro_rules! gen_byterepr_impls_array {
                     }
                 }
             
-                #[inline]
                 fn copy_into_be_bytes(self, dest: &mut [u8]) {
                     assert!(dest.len() >= Self::BYTE_LEN);
                     
@@ -1011,14 +877,12 @@ macro_rules! gen_byterepr_impls_array {
                     }
                 }
             
-                #[inline]
                 fn into_be_bytes(self) -> Vec<u8> {
                     let mut out_vec = vec![Default::default(); Self::BYTE_LEN];
                     self.copy_into_be_bytes(&mut out_vec);
                     out_vec
                 }
             
-                #[inline]
                 fn into_le_bytes(self) -> Vec<u8> {
                     let mut out_vec = vec![Default::default(); Self::BYTE_LEN];
                     self.copy_into_le_bytes(&mut out_vec);
@@ -1045,7 +909,6 @@ macro_rules! gen_byterepr_impls_tuple {
             impl<$($T:ByteRepr + Default),+> ByteRepr for ($($T,)+) {
                 const BYTE_LEN: usize = $($T::BYTE_LEN +)+ 0;
 
-                #[inline]
                 fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
                     if b.len() < Self::BYTE_LEN {
                         None
@@ -1054,7 +917,6 @@ macro_rules! gen_byterepr_impls_tuple {
                     }
                 }
             
-                #[inline]
                 fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
                     if b.len() < Self::BYTE_LEN {
                         None
@@ -1064,7 +926,6 @@ macro_rules! gen_byterepr_impls_tuple {
                 }
 
                 #[allow(unused_assignments)]
-                #[inline]
                 fn from_le_bytes(b: &[u8]) -> Self {
                     let mut pos = 0;
                     let mut tup: ($($T,)+)  = ($($T::default(),)+);
@@ -1077,7 +938,6 @@ macro_rules! gen_byterepr_impls_tuple {
                 }
 
                 #[allow(unused_assignments)]
-                #[inline]
                 fn from_be_bytes(b: &[u8]) -> Self {
                     let mut pos = 0;
                     let mut tup: ($($T,)+)  = ($($T::default(),)+);
@@ -1090,7 +950,6 @@ macro_rules! gen_byterepr_impls_tuple {
                 }
 
                 #[allow(unused_assignments)]
-                #[inline]
                 fn copy_into_le_bytes(self, dest: &mut [u8]) {
                     let mut pos = 0;
                     $(
@@ -1100,7 +959,6 @@ macro_rules! gen_byterepr_impls_tuple {
                 }
 
                 #[allow(unused_assignments)]
-                #[inline]
                 fn copy_into_be_bytes(self, dest: &mut [u8]) {
                     let mut pos = 0;
                     $(
@@ -1110,7 +968,6 @@ macro_rules! gen_byterepr_impls_tuple {
                 }
 
                 #[allow(unused_assignments)]
-                #[inline]
                 fn into_be_bytes(self) -> Vec<u8> {
                     let mut dest = vec![0;Self::BYTE_LEN];
 
@@ -1124,7 +981,6 @@ macro_rules! gen_byterepr_impls_tuple {
                 }
 
                 #[allow(unused_assignments)]
-                #[inline]
                 fn into_le_bytes(self) -> Vec<u8> {
                     let mut dest = vec![0;Self::BYTE_LEN];
 
@@ -1281,7 +1137,6 @@ gen_byterepr_impls_tuple!
 impl<T: ByteRepr> ByteRepr for [T; 4] {
     const BYTE_LEN: usize = T::BYTE_LEN * 4;
 
-    #[inline]
     fn try_from_le_bytes(b: &[u8]) -> Option<Self> {
         if b.len() < Self::BYTE_LEN {
             None
@@ -1290,7 +1145,6 @@ impl<T: ByteRepr> ByteRepr for [T; 4] {
         }
     }
 
-    #[inline]
     fn try_from_be_bytes(b: &[u8]) -> Option<Self> {
         if b.len() < Self::BYTE_LEN {
             None
@@ -1299,7 +1153,6 @@ impl<T: ByteRepr> ByteRepr for [T; 4] {
         }
     }
 
-    #[inline]
     fn from_le_bytes(b: &[u8]) -> Self {
         let mut out: [MaybeUninit<T>; 4] = unsafe {
             MaybeUninit::uninit().assume_init()
@@ -1314,27 +1167,22 @@ impl<T: ByteRepr> ByteRepr for [T; 4] {
         unsafe { transmute::<_, [T; 4]>(out) }
     }
 
-    #[inline]
     fn from_be_bytes(b: &[u8]) -> Self {
         unimplemented!();
     }
 
-    #[inline]
     fn copy_into_le_bytes(self, dest: &mut [u8]) {
         unimplemented!();
     }
 
-    #[inline]
     fn copy_into_be_bytes(self, dest: &mut [u8]) {
         unimplemented!();
     }
 
-    #[inline]
     fn into_be_bytes(self) -> Vec<u8> {
         unimplemented!();
     }
 
-    #[inline]
     fn into_le_bytes(self) -> Vec<u8> {
         unimplemented!();
     }

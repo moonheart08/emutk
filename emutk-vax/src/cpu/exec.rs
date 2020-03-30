@@ -71,6 +71,69 @@ impl VAXCPU {
             InstructionType::NOP => {
                 Cycles(1)
             }
+
+            InstructionType::MOVB => {
+                let mut cycle_count = Cycles(1);
+                let (cycles, src) = fetch_and_parse_op(&mut pc, self);
+                cycle_count += cycles;
+
+                if let Err(_) = src {
+                    unimplemented!("No handling for failed opcode fetch implemented.");
+                }
+
+                let (cycles, val) = src.unwrap().load_u8(&mut pc, &mut gpr, self);
+                cycle_count += cycles;
+
+                if val == Err(()) {
+                    unimplemented!("No fetch failure handlign implemented yet.");
+                }
+
+                let (cycles, dst) = fetch_and_parse_op(&mut pc, self);
+                cycle_count += cycles;
+
+                if let Err(_) = dst {
+                    unimplemented!("No handling for failed opcode fetch implemented.");
+                }
+
+                let (cycles, res) = dst.unwrap().store_u8(&mut pc, &mut gpr, self, val.unwrap());
+                cycle_count += cycles;
+                
+                if res == Err(()) {
+                    unimplemented!("No store failure handling implemented yet.");
+                }
+                cycle_count
+            }
+            InstructionType::MOVW => {
+                let mut cycle_count = Cycles(1);
+                let (cycles, src) = fetch_and_parse_op(&mut pc, self);
+                cycle_count += cycles;
+
+                if let Err(_) = src {
+                    unimplemented!("No handling for failed opcode fetch implemented.");
+                }
+
+                let (cycles, val) = src.unwrap().load_u16(&mut pc, &mut gpr, self);
+                cycle_count += cycles;
+
+                if val == Err(()) {
+                    unimplemented!("No fetch failure handlign implemented yet.");
+                }
+
+                let (cycles, dst) = fetch_and_parse_op(&mut pc, self);
+                cycle_count += cycles;
+
+                if let Err(_) = dst {
+                    unimplemented!("No handling for failed opcode fetch implemented.");
+                }
+
+                let (cycles, res) = dst.unwrap().store_u16(&mut pc, &mut gpr, self, val.unwrap());
+                cycle_count += cycles;
+                
+                if res == Err(()) {
+                    unimplemented!("No store failure handling implemented yet.");
+                }
+                cycle_count
+            }
             InstructionType::MOVL => {
                 let mut cycle_count = Cycles(1);
                 let (cycles, src) = fetch_and_parse_op(&mut pc, self);
@@ -102,6 +165,12 @@ impl VAXCPU {
                 }
                 cycle_count
             }
+
+            InstructionType::ADDL2 => {
+                let mut cycle_count = Cycles(1);
+
+                cycle_count
+            }
             _ => {
                 unimplemented!("Not all instructions implemented yet, and no error handler implemented.");
             }
@@ -125,7 +194,7 @@ mod tests {
     #[test]
     fn exectest() {
         let mut cpu = VAXCPU::new(VAXBus::new(1024, 2048, 0, 1024));
-        let mut rom = cpu.bus.rom_mut();
+        let rom = cpu.bus.rom_mut();
         let bytes = &[0xD0, 0x8F, 0x01, 0x00, 0x00, 0x00, 0x50];
         (*rom)[0..7].copy_from_slice(bytes);
         (*rom)[8..15].copy_from_slice(bytes);
@@ -139,9 +208,9 @@ mod tests {
     #[bench]
     fn execbench(b: &mut Bencher) {
         let mut cpu = VAXCPU::new(VAXBus::new(1024, 2048, 0, 1024));
-        let mut rom = cpu.bus.rom_mut();
-        let bytes = &[0xD0, 0x8F, 0x01, 0x00, 0x00, 0x00, 0x50];
-        rom[..7*32].chunks_mut(7).for_each(|ch| ch.copy_from_slice(bytes));
+        let rom = cpu.bus.rom_mut();
+        let bytes = &[0x90, 0x8F, 0x01, 0x50, 0x01, 0xB0, 0x8F, 0x01, 0x00, 0x50, 0x01, 0xD0, 0x8F, 0x01, 0x00, 0x00, 0x00, 0x50];
+        rom[..(bytes.len())*32].chunks_mut(bytes.len()).for_each(|ch| ch.copy_from_slice(bytes));
 
         b.iter(|| {
             cpu.set_pc(Wrapping(0));

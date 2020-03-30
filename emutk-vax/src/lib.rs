@@ -18,7 +18,6 @@ pub enum DataSize {
 }
 
 impl DataSize {
-    #[inline]
     pub fn byte_len(self) -> usize {
         1 << (self as u8) // Algorithm magic :D
         /*
@@ -33,7 +32,6 @@ impl DataSize {
         */
     }
 
-    #[inline]
     pub fn bit_len(self) -> usize {
         self.byte_len() * 8
     }

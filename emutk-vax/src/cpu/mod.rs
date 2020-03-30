@@ -135,62 +135,50 @@ impl VAXCPU {
         }
     }
 
-    #[inline]
     pub fn pc(&self) -> Wrapping<u32> {
         self.gpr[15]
     }
 
-    #[inline]
     pub fn pc_mut(&mut self) -> &mut Wrapping<u32> {
         &mut self.gpr[15]
     }
 
-    #[inline]
     pub fn set_pc(&mut self, new: Wrapping<u32>) {
         self.gpr[15] = new;
     }
 
-    #[inline]
     pub fn sp(&self) -> Wrapping<u32> {
         self.gpr[14]
     }
 
-    #[inline]
     pub fn sp_mut(&mut self) -> &mut Wrapping<u32> {
         &mut self.gpr[14]
     }
 
-    #[inline]
     pub fn set_sp(&mut self, new: Wrapping<u32>) {
         self.gpr[14] = new;
     }
 
-    #[inline]
     pub fn gpr(&self) -> &[Wrapping<u32>;16] {
         &self.gpr
     }
 
-    #[inline]
     pub fn gpr_mut(&mut self) -> &mut [Wrapping<u32>;16] {
         &mut self.gpr
     }
 
-    #[inline]
     pub fn set_gpr(&mut self, gpr: [Wrapping<u32>; 16]) {
         self.gpr = gpr;
     }
 
-    #[inline]
     pub fn psl(&self) -> PSL {
         self.psl
     }
 
-    #[inline]
     pub fn psl_mut(&mut self) -> &mut PSL {
         &mut self.psl
     }
 
-    #[inline]
     pub fn set_psl(&mut self, new: PSL) {
         self.psl = new;
     }

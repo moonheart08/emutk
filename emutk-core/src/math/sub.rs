@@ -8,7 +8,6 @@ trait FlaggedSub<T: OCZSFlagData, Rhs = Self> {
 impl<T: OCZSFlagData> FlaggedSub<T> for u8 {
     type Output = Self;
 
-    #[inline]
     #[must_use]
     fn flagged_sub(self, other: Self, mut flags: T) -> (Self::Output, T) {
         let (val, carry) = self.overflowing_sub(other);
@@ -34,7 +33,6 @@ impl<T: OCZSFlagData> FlaggedSub<T> for u8 {
 impl<T: OCZSFlagData> FlaggedSub<T> for u16 {
     type Output = Self;
 
-    #[inline]
     #[must_use]
     fn flagged_sub(self, other: Self, flags: T) -> (Self::Output, T) {
         let (val, carry) = self.overflowing_sub(other);
@@ -51,7 +49,6 @@ impl<T: OCZSFlagData> FlaggedSub<T> for u16 {
 impl<T: OCZSFlagData> FlaggedSub<T> for u32 {
     type Output = Self;
 
-    #[inline]
     #[must_use]
     fn flagged_sub(self, other: Self, flags: T) -> (Self::Output, T) {
         let (val, carry) = self.overflowing_sub(other);
@@ -68,7 +65,6 @@ impl<T: OCZSFlagData> FlaggedSub<T> for u32 {
 impl<T: OCZSFlagData> FlaggedSub<T> for u64 {
     type Output = Self;
 
-    #[inline]
     #[must_use]
     fn flagged_sub(self, other: Self, flags: T) -> (Self::Output, T) {
         let (val, carry) = self.overflowing_sub(other);
@@ -86,7 +82,6 @@ impl<T: OCZSFlagData> FlaggedSub<T> for u64 {
 impl<T: OCZSFlagData> FlaggedSub<T> for u128 {
     type Output = Self;
 
-    #[inline]
     #[must_use]
     fn flagged_sub(self, other: Self, flags: T) -> (Self::Output, T) {
         let (val, carry) = self.overflowing_sub(other);

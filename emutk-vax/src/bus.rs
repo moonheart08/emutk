@@ -304,19 +304,15 @@ impl VAXBus {
         }
     }
 
-    #[inline]
     pub fn ram(&self) -> &[u8] {
         &self.ram[..]
     }
-    #[inline]
     pub fn ram_mut(&mut self) -> &mut [u8] {
         &mut self.ram[..]
     }
-    #[inline]
     pub fn rom(&self) -> &[u8] {
         &self.rom[..]
     }
-    #[inline]
     pub fn rom_mut(&mut self) -> &mut [u8] {
         &mut self.rom[..]
     }
