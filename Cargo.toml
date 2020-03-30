@@ -3,7 +3,6 @@
 members = [
     "emutk",
     "emutk-core",
-    "emutk-6809",
     "emutk-vax",
     "emutk-testing",
 ]

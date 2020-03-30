@@ -1,6 +1,15 @@
 pub extern crate emutk_core;
-pub extern crate emutk_6809;
 pub extern crate emutk_vax;
-pub extern crate emutk_6502;
 
-pub use emutk_core::ByteRepr;
+pub use emutk_core::bus::{
+    Bus,
+    TaggedBus,
+    BusError,
+};
+
+pub use emutk_core::bytes::{
+    pod_is_le,
+    pod_is_be,
+};
+
+pub use emutk_core::cycles::Cycles;

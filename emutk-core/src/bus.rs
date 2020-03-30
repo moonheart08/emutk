@@ -1,232 +1,70 @@
-use crate::bytes::ByteRepr;
+use bytemuck::{
+    Pod,
+    from_bytes,
+    bytes_of,
+};
+use std::mem::size_of;
 use std::marker::PhantomData;
 
+use crate::cycles::Cycles;
 
-pub trait Bus<Err, I> {
-    type Tag;
-
-    /// Read a ByteRepr implementing value from the bus at the selected address.
-    fn read<T: ByteRepr>(&mut self, addr: usize) -> Result<T, Err>;
-    /// Write a ByteRepr implementing value to the bus at the selected address.
-    fn write<T: ByteRepr>(&mut self, addr: usize, data: T) -> Result<(), Err>;
-
-    /// Read a ByteRepr implementing value from the bus at the selected address, with a tag.
-    fn read_tagged<T: ByteRepr>(&mut self, addr: usize, _tag: Self::Tag) -> Result<T, Err> {
-        self.read(addr)
-    }
-    /// Write a ByteRepr implementing value to the bus at the selected address, with a tag.
-    fn write_tagged<T: ByteRepr>(&mut self, addr: usize, data: T, _tag: Self::Tag) -> Result<(), Err> {
-        self.write(addr, data)
-    }
-
-    fn execute_cycle(&mut self) -> I;
+/// A generic bus error.
+pub trait BusError: std::fmt::Debug + Clone {
+    /// Emits an Out Of Bounds error.
+    fn out_of_bounds(addr: usize) -> Self;
+    /// Checks if the error is an Out Of Bound error.
+    fn is_oob_error(&self) -> bool;
+    /// Address the error occured on.
+    fn get_triggering_address(&self) -> usize;
 }
 
-pub trait BusErrorCommon {
-    fn out_of_bounds() -> Self;
+/// An emulated system bus that supports read and write operations.
+pub trait Bus<Err: BusError> {
+    /// Maximum size of a data read. Read sizes larger than this will panic.
+    const MAX_OPERATION_SIZE: usize;
+    /// Maximum value of Addr before the Bus returns an Out Of Bound error
+    const MAX_ADDRESS: usize;
+
+    /// Read a byte slice from the bus at the specified address.
+    /// ## Panics
+    /// Read sizes larger than MAX_OPERATION_SIZE will panic.
+    fn read(&mut self, addr: usize, size: usize) -> (Cycles, Result<&[u8], Err>);
+    /// Read a piece of data from the bus at the specified address.
+    /// ## Panics
+    /// Read sizes larger than MAX_OPERATION_SIZE will panic.
+    fn read_val<T: Pod + Clone>(&mut self, addr: usize) -> (Cycles, Result<T, Err>);
+
+    /// Write a byte slice to the bus at the specified address.
+    /// ## Panics
+    /// Write sizes larger than MAX_OPERATION_SIZE will panic.
+    fn write(&mut self, addr: usize, data: &[u8]) -> (Cycles, Result<(), Err>);
+    /// Write a piece of data to the bus at the specified address.
+    /// ## Panics
+    /// Write sizes larger than MAX_OPERATION_SIZE will panic.
+    fn write_val<T: Pod + Clone>(&mut self, addr: usize, data: T) -> (Cycles, Result<(), Err>);
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum SimpleBusError {
-    InvalidRead,
-    InvalidWrite,
-    OutOfBounds,
-}
+/// An extension to Bus that adds places to transport arbitrary data.
+pub trait TaggedBus<Err: BusError, InTag, OutTag>: Bus<Err> {
+    /// Read a byte slice from the bus at the specified address with tags.
+    /// ## Panics
+    /// Read sizes larger than MAX_OPERATION_SIZE will panic.
+    fn read_tagged(&mut self, addr: usize, size: usize, tag: InTag)
+        -> (Cycles, Result<(&[u8], OutTag), Err>);
+    /// Read a piece of data from the bus at the specified address with tags.
+    /// ## Panics
+    /// Read sizes larger than MAX_OPERATION_SIZE will panic.
+    fn read_val_tagged<T: Pod + Clone>(&mut self, addr: usize, size: usize, tag: InTag)
+        -> (Cycles, Result<(T, OutTag), Err>);
 
-impl BusErrorCommon for SimpleBusError {
-    fn out_of_bounds() -> Self {
-        SimpleBusError::OutOfBounds
-    }
-}
-
-/// Very simple little endian bus with 32KiB of RAM and 32KiB of ROM, ment for testing.
-pub struct RAMROMBusBE<Err> {
-    ram: Vec<u8>,
-    rom: Vec<u8>,
-    #[doc(hidden)]
-    __err: std::marker::PhantomData<Err>,
-}
-
-impl<E> RAMROMBusBE<E> {
-    pub fn new<Err>() -> RAMROMBusBE<Err> {
-        RAMROMBusBE {
-            ram: vec![0; 32768],
-            rom: vec![0; 32768],
-            __err: PhantomData,
-        }
-    }
-}
-
-// Magic algorithm will document later.
-pub fn get_page_split_data(bytes: usize, base_addr: usize, page_0_end: usize) -> (usize, usize) {
-    let adj_addr = page_0_end - base_addr;
-    assert!(bytes > adj_addr);
-
-    unimplemented!()
-}
-
-impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusBE<E> {
-    type Tag = ();
-
-    fn read<T: ByteRepr>(&mut self, addr: usize) -> Result<T, E> {
-        let len = T::BYTE_LEN;
-
-        if addr + len > u16::MAX as usize {
-            return Err(E::out_of_bounds());
-        } else {
-            let v: T = match addr {
-                n if n < 32768 - len => {
-                    let s = &self.ram[addr..len];
-                    T::from_be_bytes(s)
-                } 
-                n if n > 32768 => {
-                    let s = &self.rom[addr..len];
-                    T::from_be_bytes(s)
-                }
-                _ => {
-                    let x = &self.ram[addr..32768];
-                    let y = &self.rom[0..(len - x.len())];
-                    let f = [x, y].concat();
-                    T::from_be_bytes(&f)
-                }
-            };
-            return Ok(v);
-        }
-    }
-
-    fn write<T: ByteRepr>(&mut self, addr: usize, data: T) -> Result<(), E> {
-        let len = T::BYTE_LEN;
-        if addr + len > u16::MAX as usize {
-            return Err(E::out_of_bounds());
-        } else {
-            match addr {
-                n if n < 32768 - len => {
-                    let s = &mut self.ram[addr..len];
-                    data.copy_into_be_bytes( s);
-                } 
-                n if n > 32768 => {
-                    let s = &mut self.rom[addr..len];
-                    data.copy_into_be_bytes(s);
-                }
-                _ => {
-                    let x = &mut self.ram[addr..32768];
-                    let y = &mut self.rom[0..(len - x.len())];
-                    
-                    let mut v = vec![0; len];
-                    data.copy_into_be_bytes(&mut v);
-
-                    x.copy_from_slice(&v[0..x.len()]);
-                    y.copy_from_slice(&v[x.len()..v.len()]);
-                }
-            };
-            return Ok(());
-        }
-    }
-    
-    fn execute_cycle(&mut self) -> () {
-        // Do nothing, this bus doesn't do any processing.
-    }
-}
-
-
-/// Very simple little endian bus with 32KiB of RAM and 32KiB of ROM, ment for testing.
-pub struct RAMROMBusLE<Err> {
-    ram: Vec<u8>,
-    rom: Vec<u8>,
-    __err: std::marker::PhantomData<Err>,
-}
-
-impl<E> RAMROMBusLE<E> {
-    pub fn new<Err>() -> RAMROMBusLE<Err> {
-        RAMROMBusLE {
-            ram: vec![0; 32768],
-            rom: vec![0; 32768],
-            __err: PhantomData,
-        }
-    }
-}
-
-impl<E: BusErrorCommon> Bus<E, ()> for RAMROMBusLE<E> {
-    type Tag = ();
-
-    fn read<T: ByteRepr>(&mut self, addr: usize) -> Result<T, E> {
-        let len = T::BYTE_LEN;
-
-        if addr + len > u16::MAX as usize {
-            return Err(E::out_of_bounds());
-        } else {
-            let v: T = match addr {
-                n if n < 32768 - len => {
-                    let s = &self.ram[addr..len];
-                    T::from_le_bytes(s)
-                } 
-                n if n > 32768 => {
-                    let s = &self.rom[addr..len];
-                    T::from_le_bytes(s)
-                }
-                _ => {
-                    let x = &self.ram[addr..32768];
-                    let y = &self.rom[0..(len - x.len())];
-                    let f = [x, y].concat();
-                    T::from_le_bytes(&f)
-                }
-            };
-            return Ok(v);
-        }
-    }
-
-    fn write<T: ByteRepr>(&mut self, addr: usize, data: T) -> Result<(), E> {
-        let len = T::BYTE_LEN;
-        if addr + len > u16::MAX as usize {
-            return Err(E::out_of_bounds());
-        } else {
-            match addr {
-                n if n < 32768 - len => {
-                    let s = &mut self.ram[addr..len];
-                    data.copy_into_le_bytes( s);
-                } 
-                n if n > 32768 => {
-                    let s = &mut self.rom[addr..len];
-                    data.copy_into_le_bytes(s);
-                }
-                _ => {
-                    let x = &mut self.ram[addr..32768];
-                    let y = &mut self.rom[0..(len - x.len())];
-                    
-                    let mut v = vec![0; len];
-                    data.copy_into_le_bytes(&mut v);
-
-                    x.copy_from_slice(&v[0..x.len()]);
-                    y.copy_from_slice(&v[x.len()..v.len()]);
-                }
-            };
-            return Ok(());
-        }
-    }
-
-    fn execute_cycle(&mut self) -> () {
-        // Do nothing, this bus doesn't do any processing.
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn check_ramrom_bus_boundaries() {
-        let mut bus: RAMROMBusLE<SimpleBusError> = RAMROMBusLE::<SimpleBusError>::new(); 
-
-        assert_eq!(bus.write::<u32>(32766, 0x1234_5678), Ok(()));
-
-        assert_eq!(bus.read::<u32>(32766), Ok(0x1234_5678));
-    }
-
-    #[test]
-    fn check_before_ramrom_bus_boundaries() {
-        let mut bus: RAMROMBusLE<SimpleBusError> = RAMROMBusLE::<SimpleBusError>::new(); 
-
-        assert_eq!(bus.write::<u32>(32764, 0x1234_5678), Ok(()));
-
-        assert_eq!(bus.read::<u32>(32764), Ok(0x1234_5678));
-    }
+    /// Write a byte slice to the bus at the specified address with tags.
+    /// ## Panics
+    /// Write sizes larger than MAX_OPERATION_SIZE will panic.
+    fn write_tagged(&mut self, addr: usize, data: &[u8], tag: InTag) 
+        -> (Cycles, Result<OutTag, Err>);
+    /// Write a piece of data to the bus at the specified address with tags.
+    /// ## Panics
+    /// Write sizes larger than MAX_OPERATION_SIZE will panic.
+    fn write_val_tagged<T: Pod + Clone>(&mut self, addr: usize, data: T, tag: InTag)
+        -> (Cycles, Result<OutTag, Err>);
 }

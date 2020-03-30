@@ -3,9 +3,7 @@ pub mod bytes;
 pub mod split;
 pub mod math;
 pub mod flags;
-
-pub use bus::Bus;
-pub use bytes::ByteRepr;
+pub mod cycles;
 
 #[cfg(test)]
 mod tests {
