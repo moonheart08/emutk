@@ -7,37 +7,25 @@ use crate::VAXNum;
 pub fn parse_read_operand
     <B: VAXBus, T: VAXNum>
     (cpu: &mut VAXCPU<B>)
-    -> Result<UnresolvedOperandRead<T>, Error>
+    -> Result<UnresolvedOperand<T>, Error>
 {
     let pc = cpu.regfile.get_pc();
     let op_head: [u8;2] = cpu.read_val(pc)?;
     let mode = OperandMode::identify_operand(op_head)?;
     cpu.regfile.set_pc(pc + mode.byte_size::<T>() as u32);
-    mode.create_unresolved_read::<B,T>(cpu)
+    mode.create_resolvable::<B,T>(cpu, false)
 }
 
 pub fn parse_write_operand
     <B: VAXBus, T: VAXNum>
     (cpu: &mut VAXCPU<B>)
-    -> Result<UnresolvedOperandWrite<T>, Error>
+    -> Result<UnresolvedOperand<T>, Error>
 {
     let pc = cpu.regfile.get_pc();
     let op_head: [u8;2] = cpu.read_val(pc)?;
     let mode = OperandMode::identify_operand(op_head)?;
     cpu.regfile.set_pc(pc + mode.byte_size::<T>() as u32);
-    mode.create_unresolved_write::<B,T>(cpu)
-}
-
-pub fn parse_modify_operand
-    <B: VAXBus, T: VAXNum>
-    (cpu: &mut VAXCPU<B>)
-    -> Result<UnresolvedOperandModify<T>, Error>
-{
-    let pc = cpu.regfile.get_pc();
-    let op_head: [u8;2] = cpu.read_val(pc)?;
-    let mode = OperandMode::identify_operand(op_head)?;
-    cpu.regfile.set_pc(pc + mode.byte_size::<T>() as u32);
-    mode.create_unresolved_modify::<B,T>(cpu)
+    mode.create_resolvable::<B,T>(cpu, true)
 }
 
 pub fn rrw_instr_wrap
@@ -68,7 +56,7 @@ pub fn rm_instr_wrap
     where F: Fn(V, O, &mut VAXCPU<B>) -> Result<O, Error>
 {
     let opr_a = parse_read_operand::<B,V>(cpu)?.read(cpu)?;
-    let mut opm_o = parse_modify_operand::<B,O>(cpu)?;
+    let mut opm_o = parse_write_operand::<B,O>(cpu)?;
 
     let v = func(opr_a, opm_o.read(cpu)?, cpu)?;
     opm_o.execute_write(cpu, v);

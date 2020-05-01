@@ -221,11 +221,11 @@ impl VAXRegisterFile {
                 return T::primitive_from(0_u32);
             }
             let a = start_gpr as usize;
-            let b = gpr_count as usize + a - 1;
+            let b = gpr_count as usize + a;
 
             let regs: &[u32] = &self.gpr[a..b];
             let slice = cast_slice::<_, u8>(regs);
-            return T::from_le_bytes(slice);
+            return T::from_le_bytes(&slice[..T::BYTE_LEN]);
         }
     }
 

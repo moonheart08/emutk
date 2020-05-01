@@ -78,7 +78,7 @@ where
     F: AsPrimitive<T>,
     T: 'static + Copy ,
 {
-    #[inline]
+
     fn primitive_from(from:F)->Self{
        from.as_()
     }

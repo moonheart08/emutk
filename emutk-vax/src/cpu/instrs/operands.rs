@@ -103,10 +103,8 @@ impl OperandMode {
         }
     }
 
-    /// NOTE ON SIDE EFFECTS:
-    /// Autoincrement and autodecrement operations *update registers*. Do *not* call out of order.
-    pub fn create_unresolved_read<B: VAXBus, T: VAXNum>
-        (&self, cpu: &mut VAXCPU<B>) -> Result<UnresolvedOperandRead<T>, Error>
+    pub fn create_resolvable<B: VAXBus, T: VAXNum>
+        (&self, cpu: &mut VAXCPU<B>, write_intent: bool) -> Result<UnresolvedOperand<T>, Error>
     {
         use OperandMode::*;
         let pc = cpu.regfile.get_pc();
@@ -121,365 +119,111 @@ impl OperandMode {
             IndexedWordDisplacementDeferred(_, _) => todo!(),
             IndexedLongwordDisplacement(_, _) => todo!(),
             IndexedLongwordDisplacementDeferred(_, _) => todo!(),
-            Literal(v) => Ok(UnresolvedOperandRead::Value(T::primitive_from(*v))),
+            Literal(v) => if write_intent {
+                Err(Error::new_address_mode_fault())
+            } else {
+                Ok(UnresolvedOperand::Value(T::primitive_from(*v), 0))
+            },
             Register(r) => {
                 let v = cpu.regfile.read_gpr_ext(*r);
-                Ok(UnresolvedOperandRead::Value(v))
+                Ok(UnresolvedOperand::Value(v, *r))
             },
             RegisterDeferred(r) => {
                 let v = cpu.regfile.read_gpr(*r);
-                Ok(UnresolvedOperandRead::MemRead(v))
-            },
-            Autoincrement(r) => {
-                let v = cpu.regfile.read_gpr(*r);
-                cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandRead::MemRead(v))
-            },
-            Autodecrement(r) => {
-                let v = cpu.regfile.read_gpr(*r);
-                cpu.regfile.write_gpr(*r, v.wrapping_sub(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandRead::MemRead(v))
-            },
-            AutoincrementDeferred(r) => {
-                let v = cpu.regfile.read_gpr(*r);
-                cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandRead::DeferredMemRead(v))
-            },
-            ByteDisplacement(r) => {
-                let disp = cpu.read_val::<i8>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandRead::MemRead(adj_addr))
-            }
-
-            ByteDisplacementDeferred(r) => {
-                let disp = cpu.read_val::<i8>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandRead::DeferredMemRead(adj_addr))
-            }
-
-            WordDisplacement(r) => {
-                let disp = cpu.read_val::<i16>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandRead::MemRead(adj_addr))
-            }
-
-            WordDisplacementDeferred(r) => {
-                let disp = cpu.read_val::<i16>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandRead::DeferredMemRead(adj_addr))
-            }
-
-            LongwordDisplacement(r) => {
-                let disp = cpu.read_val::<i32>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp) as u32;
-                Ok(UnresolvedOperandRead::MemRead(adj_addr))
-            }
-
-            LongwordDisplacementDeferred(r) => {
-                let disp = cpu.read_val::<i32>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp) as u32;
-                Ok(UnresolvedOperandRead::DeferredMemRead(adj_addr))
-            }
-        }
-    }
-
-    pub fn create_unresolved_write<B: VAXBus, T: VAXNum>
-        (&self, cpu: &mut VAXCPU<B>) -> Result<UnresolvedOperandWrite<T>, Error>
-    {
-        use OperandMode::*;
-        let pc = cpu.regfile.get_pc();
-        match self {
-            IndexedRegisterDeferred(_, _) => todo!(),
-            IndexedAutodecrement(_, _) => todo!(),
-            IndexedAutoincrement(_, _) => todo!(),
-            IndexedAutoincrementDeferred(_, _) => todo!(),
-            IndexedByteDisplacement(_, _) => todo!(),
-            IndexedByteDisplacementDeferred(_, _) => todo!(),
-            IndexedWordDisplacement(_, _) => todo!(),
-            IndexedWordDisplacementDeferred(_, _) => todo!(),
-            IndexedLongwordDisplacement(_, _) => todo!(),
-            IndexedLongwordDisplacementDeferred(_, _) => todo!(),
-            Literal(_) => Err(Error::new_address_mode_fault()),
-            Register(r) => {
-                Ok(UnresolvedOperandWrite::RegWrite(*r))
-            },
-            RegisterDeferred(r) => {
-                let v = cpu.regfile.read_gpr(*r);
-                Ok(UnresolvedOperandWrite::MemWrite(v))
+                Ok(UnresolvedOperand::Mem(v))
             },
             // increment/decrement handled in .finalize()
             Autoincrement(r) => {
                 let v = cpu.regfile.read_gpr(*r);
                 cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandWrite::MemWrite(v))
+                Ok(UnresolvedOperand::Mem(v))
             },
             Autodecrement(r) => {
                 let v = cpu.regfile.read_gpr(*r);
                 cpu.regfile.write_gpr(*r, v.wrapping_sub(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandWrite::MemWrite(v))
+                Ok(UnresolvedOperand::Mem(v))
             },
             AutoincrementDeferred(r) => {
                 let v = cpu.regfile.read_gpr(*r);
                 cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandWrite::DeferredMemWrite(v))
+                Ok(UnresolvedOperand::DeferredMem(v))
             },
             ByteDisplacement(r) => {
                 let disp = cpu.read_val::<i8>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
                 let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandWrite::MemWrite(adj_addr))
+                Ok(UnresolvedOperand::Mem(adj_addr))
             }
 
             ByteDisplacementDeferred(r) => {
                 let disp = cpu.read_val::<i8>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
                 let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandWrite::DeferredMemWrite(adj_addr))
+                Ok(UnresolvedOperand::DeferredMem(adj_addr))
             }
 
             WordDisplacement(r) => {
                 let disp = cpu.read_val::<i16>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
                 let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandWrite::MemWrite(adj_addr))
+                Ok(UnresolvedOperand::Mem(adj_addr))
             }
 
             WordDisplacementDeferred(r) => {
                 let disp = cpu.read_val::<i16>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
                 let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandWrite::DeferredMemWrite(adj_addr))
+                Ok(UnresolvedOperand::DeferredMem(adj_addr))
             }
 
             LongwordDisplacement(r) => {
                 let disp = cpu.read_val::<i32>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
                 let adj_addr = (addr as i32).wrapping_add(disp) as u32;
-                Ok(UnresolvedOperandWrite::MemWrite(adj_addr))
+                Ok(UnresolvedOperand::Mem(adj_addr))
             }
 
             LongwordDisplacementDeferred(r) => {
                 let disp = cpu.read_val::<i32>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
                 let adj_addr = (addr as i32).wrapping_add(disp) as u32;
-                Ok(UnresolvedOperandWrite::DeferredMemWrite(adj_addr))
-            }
-        }
-    }
-    pub fn create_unresolved_modify<B: VAXBus, T: VAXNum>
-        (&self, cpu: &mut VAXCPU<B>) -> Result<UnresolvedOperandModify<T>, Error>
-    {
-        use OperandMode::*;
-        let pc = cpu.regfile.get_pc();
-        match self {
-            IndexedRegisterDeferred(_, _) => todo!(),
-            IndexedAutodecrement(_, _) => todo!(),
-            IndexedAutoincrement(_, _) => todo!(),
-            IndexedAutoincrementDeferred(_, _) => todo!(),
-            IndexedByteDisplacement(_, _) => todo!(),
-            IndexedByteDisplacementDeferred(_, _) => todo!(),
-            IndexedWordDisplacement(_, _) => todo!(),
-            IndexedWordDisplacementDeferred(_, _) => todo!(),
-            IndexedLongwordDisplacement(_, _) => todo!(),
-            IndexedLongwordDisplacementDeferred(_, _) => todo!(),
-            Literal(_) => Err(Error::new_address_mode_fault()),
-            Register(r) => {
-                let v = cpu.regfile.read_gpr_ext(*r);
-                Ok(UnresolvedOperandModify::Value(v, *r))
-            },
-            RegisterDeferred(r) => {
-                let v = cpu.regfile.read_gpr(*r);
-                Ok(UnresolvedOperandModify::Mem(v))
-            },
-            // increment/decrement handled in .finalize()
-            Autoincrement(r) => {
-                let v = cpu.regfile.read_gpr(*r);
-                cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandModify::Mem(v))
-            },
-            Autodecrement(r) => {
-                let v = cpu.regfile.read_gpr(*r);
-                cpu.regfile.write_gpr(*r, v.wrapping_sub(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandModify::Mem(v))
-            },
-            AutoincrementDeferred(r) => {
-                let v = cpu.regfile.read_gpr(*r);
-                cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperandModify::DeferredMem(v))
-            },
-            ByteDisplacement(r) => {
-                let disp = cpu.read_val::<i8>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandModify::Mem(adj_addr))
-            }
-
-            ByteDisplacementDeferred(r) => {
-                let disp = cpu.read_val::<i8>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandModify::DeferredMem(adj_addr))
-            }
-
-            WordDisplacement(r) => {
-                let disp = cpu.read_val::<i16>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandModify::Mem(adj_addr))
-            }
-
-            WordDisplacementDeferred(r) => {
-                let disp = cpu.read_val::<i16>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp as i32) as u32;
-                Ok(UnresolvedOperandModify::DeferredMem(adj_addr))
-            }
-
-            LongwordDisplacement(r) => {
-                let disp = cpu.read_val::<i32>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp) as u32;
-                Ok(UnresolvedOperandModify::Mem(adj_addr))
-            }
-
-            LongwordDisplacementDeferred(r) => {
-                let disp = cpu.read_val::<i32>(pc)?;
-                let addr = cpu.regfile.read_gpr(*r);
-                let adj_addr = (addr as i32).wrapping_add(disp) as u32;
-                Ok(UnresolvedOperandModify::DeferredMem(adj_addr))
+                Ok(UnresolvedOperand::DeferredMem(adj_addr))
             }
         }
     }
 }
 
 #[derive(Copy, Clone, Debug)]
-pub enum UnresolvedOperandRead<T: VAXNum> {
-    MemRead(u32),
-    DeferredMemRead(u32),
-    Value(T),
-}
-
-impl<T: VAXNum> UnresolvedOperandRead<T> {
-    // side effect note: Replaces DeferredAddress with Address
-    pub fn validate<B: VAXBus>(&mut self, cpu: &mut VAXCPU<B>) -> Result<(), Error> 
-    {
-        match self {
-            UnresolvedOperandRead::MemRead(addr) => {
-                cpu.can_read_val::<T>(*addr)
-            }
-            UnresolvedOperandRead::DeferredMemRead(addr) => {
-                let addr2 = cpu.read_val::<u32>(*addr)?;
-                cpu.can_read_val::<T>(addr2)?;    
-                *self = UnresolvedOperandRead::MemRead(addr2);
-                Ok(())
-            }
-            UnresolvedOperandRead::Value(_) => Ok(()),
-        }
-    }
-
-    pub fn execute<B: VAXBus>(self, cpu: &mut VAXCPU<B>) -> T
-    {
-        match self {
-            UnresolvedOperandRead::MemRead(addr) => {
-                cpu.read_val(addr).unwrap()
-            }
-            UnresolvedOperandRead::Value(v) => v,
-            _ => unreachable!(), // Reaching here means someone forgot to validate ):
-        }
-    }
-
-    pub fn read<B: VAXBus>(mut self, cpu: &mut VAXCPU<B>) -> Result<T, Error>
-    {
-        self.validate(cpu)?;
-        Ok(self.execute(cpu))
-    }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum UnresolvedOperandWrite<T: VAXNum> {
-    MemWrite(u32),
-    DeferredMemWrite(u32), // read address to get destination address
-    RegWrite(u8),
-    #[doc(hidden)]
-    __Phantom(std::marker::PhantomData<T>)
-}
-
-impl<T: VAXNum>  UnresolvedOperandWrite<T> {
-    pub fn validate<B: VAXBus>(&mut self, cpu: &mut VAXCPU<B>) -> Result<(), Error> 
-    {
-        match self {
-            UnresolvedOperandWrite::MemWrite(addr) => {
-                cpu.can_write_val::<T>(*addr)
-            }
-            UnresolvedOperandWrite::DeferredMemWrite(addr) => {
-                let addr2 = cpu.read_val::<u32>(*addr)?;
-                cpu.can_write_val::<T>(addr2)?;    
-                *self = UnresolvedOperandWrite::MemWrite(addr2);
-                Ok(())
-            }
-            UnresolvedOperandWrite::RegWrite(_) => Ok(()),
-            _ => unreachable!(),
-        }
-    }
-
-    pub fn execute<B: VAXBus>(&mut self, cpu: &mut VAXCPU<B>, value: T) 
-    {
-        match self {
-            UnresolvedOperandWrite::RegWrite(r) => {
-                cpu.regfile.write_gpr_ext::<T>(*r, value);
-            }
-            UnresolvedOperandWrite::MemWrite(addr) => {
-                cpu.write_val(*addr, value).unwrap();
-            }
-            _ => {},
-        }
-    }
-
-    pub fn write<B: VAXBus>(mut self, cpu: &mut VAXCPU<B>, value: T) -> Result<(), Error>
-    {
-        self.validate(cpu)?;
-        self.execute(cpu, value);
-        Ok(())
-    }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum UnresolvedOperandModify<T: VAXNum> {
+pub enum UnresolvedOperand<T: VAXNum> {
     Mem(u32),
     DeferredMem(u32),
     Value(T, u8),
 }
 
-impl<T: VAXNum>  UnresolvedOperandModify<T> {
+impl<T: VAXNum>  UnresolvedOperand<T> {
     pub fn validate<B: VAXBus>(&mut self, cpu: &mut VAXCPU<B>) -> Result<(), Error> 
     {
         match self {
-            UnresolvedOperandModify::Mem(addr) => {
+            UnresolvedOperand::Mem(addr) => {
                 cpu.can_write_val::<T>(*addr)
             }
-            UnresolvedOperandModify::DeferredMem(addr) => {
+            UnresolvedOperand::DeferredMem(addr) => {
                 let addr2 = cpu.read_val::<u32>(*addr)?;
                 cpu.can_write_val::<T>(addr2)?;    
-                *self = UnresolvedOperandModify::Mem(addr2);
+                *self = UnresolvedOperand::Mem(addr2);
                 Ok(())
             }
-            UnresolvedOperandModify::Value(_,_) => Ok(()),
+            UnresolvedOperand::Value(_,_) => Ok(()),
         }
     }
 
     pub fn execute_write<B: VAXBus>(&mut self, cpu: &mut VAXCPU<B>, value: T) 
     {
         match self {
-            UnresolvedOperandModify::Value(_, r) => {
+            UnresolvedOperand::Value(_, r) => {
                 cpu.regfile.write_gpr_ext::<T>(*r, value);
             }
-            UnresolvedOperandModify::Mem(addr) => {
+            UnresolvedOperand::Mem(addr) => {
                 cpu.write_val(*addr, value).unwrap();
             }
             _ => {},
@@ -496,10 +240,10 @@ impl<T: VAXNum>  UnresolvedOperandModify<T> {
     pub fn execute_read<B: VAXBus>(self, cpu: &mut VAXCPU<B>) -> T
     {
         match self {
-            UnresolvedOperandModify::Mem(addr) => {
+            UnresolvedOperand::Mem(addr) => {
                 cpu.read_val(addr).unwrap()
             }
-            UnresolvedOperandModify::Value(v, _) => v,
+            UnresolvedOperand::Value(v, _) => v,
             _ => unreachable!(), // Reaching here means someone forgot to validate ):
         }
     }

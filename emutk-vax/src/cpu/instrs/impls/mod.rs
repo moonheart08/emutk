@@ -1,6 +1,8 @@
 mod arith;
 mod misc;
 mod util;
+#[cfg(test)]
+mod tests;
 
 use crate::cpu::VAXCPU;
 use crate::cpu::instrs::InstructionType;
@@ -30,7 +32,7 @@ pub fn execute_instr<T: VAXBus>
     use InstructionType::*;
     match instr.unwrap() {
         HALT => misc::instr_halt(cpu, cycle_count),
-        NOP => misc::instr_nop(cpu, cycle_count),
+        NOP => Ok(()),
         ADAWI => arith::instr_add2::<_, u32>(cpu, cycle_count),
         ADDB2 => arith::instr_add2::<_, u8>(cpu, cycle_count),
         ADDB3 => arith::instr_add3::<_, u8>(cpu, cycle_count),
