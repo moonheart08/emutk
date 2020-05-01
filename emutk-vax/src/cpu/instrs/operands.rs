@@ -25,15 +25,12 @@ pub enum OperandMode {
     IndexedWordDisplacementDeferred(u8, u8),
     IndexedLongwordDisplacement(u8, u8),
     IndexedLongwordDisplacementDeferred(u8, u8),
-    IndexedAbsolute(u8),
 
     Register(u8), // 5
     RegisterDeferred(u8), // 6
     Autodecrement(u8), // 7
     Autoincrement(u8), // 8
-    Immediate(), // 8F
     AutoincrementDeferred(u8), // 9
-    Absolute(), // 9F
     ByteDisplacement(u8), // 10
     ByteDisplacementDeferred(u8), // 11
     WordDisplacement(u8), // 12
@@ -55,8 +52,6 @@ impl OperandMode {
                     6 => OperandMode::IndexedRegisterDeferred(reg, indexed_reg),
                     7 => OperandMode::IndexedAutodecrement(reg, indexed_reg),
                     8 => OperandMode::IndexedAutoincrement(reg, indexed_reg),
-                    9 if indexed_reg != 0xF =>
-                        OperandMode::IndexedAbsolute(reg),
                     9 => OperandMode::IndexedAutoincrementDeferred(reg, indexed_reg),
                     10 => OperandMode::IndexedByteDisplacement(reg, indexed_reg),
                     11 => OperandMode::IndexedByteDisplacementDeferred(reg, indexed_reg),
@@ -70,10 +65,8 @@ impl OperandMode {
             5 => OperandMode::Register(reg),
             6 => OperandMode::RegisterDeferred(reg),
             7 => OperandMode::Autodecrement(reg),
-            8 if reg != 0xF => OperandMode::Autoincrement(reg),
-            8 /* if reg == 0xF */ => OperandMode::Immediate(),
-            9 if reg != 0xF => OperandMode::AutoincrementDeferred(reg),
-            9 /* if reg == 0xF */ => OperandMode::Absolute(),
+            8 => OperandMode::Autoincrement(reg),
+            9 => OperandMode::AutoincrementDeferred(reg),
             10 => OperandMode::ByteDisplacement(reg),
             11 => OperandMode::ByteDisplacementDeferred(reg),
             12 => OperandMode::WordDisplacement(reg),
@@ -90,10 +83,6 @@ impl OperandMode {
             Literal(_) | Register(_) | RegisterDeferred(_) |
             Autodecrement(_) | Autoincrement(_) | AutoincrementDeferred(_) =>
                 1, // returns an Option. always Some.
-            Immediate() =>
-                1 + T::BYTE_LEN,
-            Absolute() => 
-                5,
             ByteDisplacement(_) | ByteDisplacementDeferred(_) =>
                 2,
             WordDisplacement(_) | WordDisplacementDeferred(_) =>
@@ -111,8 +100,6 @@ impl OperandMode {
                 => 4,
             IndexedLongwordDisplacement(_, _) | IndexedLongwordDisplacementDeferred(_, _)
                 => 6,
-
-            IndexedAbsolute(_) => 6,
         }
     }
 
@@ -134,7 +121,6 @@ impl OperandMode {
             IndexedWordDisplacementDeferred(_, _) => todo!(),
             IndexedLongwordDisplacement(_, _) => todo!(),
             IndexedLongwordDisplacementDeferred(_, _) => todo!(),
-            IndexedAbsolute(_) => todo!(),
             Literal(v) => Ok(UnresolvedOperandRead::Value(T::primitive_from(*v))),
             Register(r) => {
                 let v = cpu.regfile.read_gpr_ext(*r);
@@ -154,19 +140,11 @@ impl OperandMode {
                 cpu.regfile.write_gpr(*r, v.wrapping_sub(T::BYTE_LEN as u32));
                 Ok(UnresolvedOperandRead::MemRead(v))
             },
-            Immediate() => {
-                let v = cpu.read_val::<T>(pc.wrapping_sub(T::BYTE_LEN as u32))?;                
-                Ok(UnresolvedOperandRead::Value(v))
-            },
             AutoincrementDeferred(r) => {
                 let v = cpu.regfile.read_gpr(*r);
                 cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
                 Ok(UnresolvedOperandRead::DeferredMemRead(v))
             },
-            Absolute() => {
-                let v = cpu.read_val::<u32>(pc)?;
-                Ok(UnresolvedOperandRead::MemRead(v))
-            }
             ByteDisplacement(r) => {
                 let disp = cpu.read_val::<i8>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
@@ -227,7 +205,6 @@ impl OperandMode {
             IndexedWordDisplacementDeferred(_, _) => todo!(),
             IndexedLongwordDisplacement(_, _) => todo!(),
             IndexedLongwordDisplacementDeferred(_, _) => todo!(),
-            IndexedAbsolute(_) => todo!(),
             Literal(_) => Err(Error::new_address_mode_fault()),
             Register(r) => {
                 Ok(UnresolvedOperandWrite::RegWrite(*r))
@@ -247,18 +224,11 @@ impl OperandMode {
                 cpu.regfile.write_gpr(*r, v.wrapping_sub(T::BYTE_LEN as u32));
                 Ok(UnresolvedOperandWrite::MemWrite(v))
             },
-            Immediate() => {
-                Err(Error::new_address_mode_fault())
-            },
             AutoincrementDeferred(r) => {
                 let v = cpu.regfile.read_gpr(*r);
                 cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
                 Ok(UnresolvedOperandWrite::DeferredMemWrite(v))
             },
-            Absolute() => {
-                let v = cpu.read_val::<u32>(pc)?;
-                Ok(UnresolvedOperandWrite::MemWrite(v))
-            }
             ByteDisplacement(r) => {
                 let disp = cpu.read_val::<i8>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
@@ -318,7 +288,6 @@ impl OperandMode {
             IndexedWordDisplacementDeferred(_, _) => todo!(),
             IndexedLongwordDisplacement(_, _) => todo!(),
             IndexedLongwordDisplacementDeferred(_, _) => todo!(),
-            IndexedAbsolute(_) => todo!(),
             Literal(_) => Err(Error::new_address_mode_fault()),
             Register(r) => {
                 let v = cpu.regfile.read_gpr_ext(*r);
@@ -339,18 +308,11 @@ impl OperandMode {
                 cpu.regfile.write_gpr(*r, v.wrapping_sub(T::BYTE_LEN as u32));
                 Ok(UnresolvedOperandModify::Mem(v))
             },
-            Immediate() => {
-                Err(Error::new_address_mode_fault())
-            },
             AutoincrementDeferred(r) => {
                 let v = cpu.regfile.read_gpr(*r);
                 cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
                 Ok(UnresolvedOperandModify::DeferredMem(v))
             },
-            Absolute() => {
-                let v = cpu.read_val::<u32>(pc)?;
-                Ok(UnresolvedOperandModify::Mem(v))
-            }
             ByteDisplacement(r) => {
                 let disp = cpu.read_val::<i8>(pc)?;
                 let addr = cpu.regfile.read_gpr(*r);
