@@ -1,5 +1,5 @@
 [package]
-name = "emutk-core"
+name = "emutk-z80"
 version = "0.1.0"
 authors = ["moonheart08 <moonheart08@users.noreply.github.com>"]
 edition = "2018"
@@ -7,4 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-byterepr = "^0.1"
+emutk-core = { path = "../emutk-core" }
+num = "^0.2"
+num-traits = "^0.2"
+num-derive = "^0.3"

@@ -12,14 +12,5 @@ num-traits = "^0.2"
 num-derive = "^0.3"
 bytemuck = "^1.2"
 emutk-core = { path = "../emutk-core" }
+lru = "^0.4"
 
-[profile.release]
-lto = true
-opt-level = 3
-codegen-units = 1
-
-[profile.bench]
-lto = true
-opt-level = 3
-codegen-units = 1
-incremental = false

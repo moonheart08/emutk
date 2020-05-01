@@ -1,219 +1,119 @@
 use emutk_core::{
     cycles::Cycles,
-    bus::{
-        TaggedBus,
-    },
-    bytes::ByteRepr,
+    ByteRepr,
 };
 
-use crate::{
-    bus::{
-        VAXBus,
-        VAXBusError,
-        VAXBusTag,
-        VAXBusReturnTag,
-        PrivilegeMode,
-    }
-};
-
-use bytemuck::{
-    Pod,
-    bytes_of,
-    from_bytes,
-};
-
-use std::num::Wrapping;
+use num_derive::*;
 
 pub mod exec;
+pub mod instrs;
+pub mod regfile;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[repr(C)]
-/// Processor Status Longword
-/// 
-/// ```text
-///  3 3 2 2 2 2 2   2   2 2         1
-///  1 0 9 8 7 6 5   3   1 0         5             7 6 5 4 3 2 1 0
-/// +-+-+-+-+-+-+---+---+-+---------+-------------+-+-+-+-+-+-+-+-|
-/// |C|T|V|M|F|I|CUR|PRV|M|         |             |D|F|I| | | | | |
-/// |M|P|M|B|P|S|MOD|MOD|B|   IPL   |     MBZ     |V|U|V|T|N|Z|V|C|
-/// | | | |Z|D| |   |   |Z|         |             | | | | | | | | |
-/// +-+-+-+-+-+-+---+---+-+---------+-------------+-+-+-+-+-+-+-+-+
-/// ```
-/// - CM: Compatibility Mode
-/// - TP: Trace Pending
-/// - VM: Virtual Machine Mode
-/// - FPD: First Part Done
-/// - IS: Interrupt Stack
-/// - CUR_MOD: Current Access Mode
-/// - PRV_MOD: Previous Access Mode
-/// - IPL: Interrupt Priority Level
-/// - DV: Decimal Overflow Enable
-/// - FU: Floating Underflow Enable
-/// - IV: Integer Overflow Enable
-/// - T: Trace Enable
-/// - N: Negative
-/// - Z: Zero
-/// - V: Overflow
-/// - C: Carry
+mod psl;
+pub use psl::PSL;
+use regfile::VAXRegisterFile;
 
-pub struct PSL(u32);
+use crate::Error;
+use crate::bus::VAXBus;
+use crate::CVZN;
 
-impl PSL {
-    pub fn get_c(self) -> bool {
-        (self.0 & 0x01) != 0
-    }
-
-    pub fn set_c(&mut self, val: bool) {
-        let val = val as u32;
-        self.0 &= !0x01;
-        self.0 |= val;
-    }
-
-    pub fn get_v(self) -> bool {
-        (self.0 & 0x02) != 0
-    }
-
-    pub fn set_v(&mut self, val: bool) {
-        let val = val as u32;
-        self.0 &= !0x02;
-        self.0 |= val;
-    }
-
-    pub fn get_z(self) -> bool {
-        (self.0 & 0x04) != 0
-    }
-
-    pub fn set_z(&mut self, val: bool) {
-        let val = val as u32;
-        self.0 &= !0x04;
-        self.0 |= val;
-    }
-
-    pub fn get_n(self) -> bool {
-        (self.0 & 0x08) != 0
-    }
-
-    pub fn set_n(&mut self, val: bool) {
-        let val = val as u32;
-        self.0 &= !0x08;
-        self.0 |= val;
-    }
-
-    pub fn get_t(self) -> bool {
-        (self.0 & 0x10) != 0
-    }
-
-    pub fn set_t(&mut self, val: bool) {
-        let val = val as u32;
-        self.0 &= !0x10;
-        self.0 |= val;
-    }
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, FromPrimitive, ToPrimitive)]
+pub enum PrivilegeMode {
+    Kernel = 0,
+    Executive = 1,
+    Supervisor = 2,
+    User = 3,
 }
 
-pub struct VAXCPU {
-    gpr: [Wrapping<u32>;16],
-    psl: PSL,
+pub struct VAXCPU<Bus: VAXBus> {
+    regfile: VAXRegisterFile,
+
 
     halted: bool,
 
-    bus: VAXBus,
+    bus: Option<Bus>,
 
-    last_read: Option<u32>,
-    last_read_data: u32, // Only used if last_read is Some.
+    cur_cycle: Cycles,
 }
 
-impl VAXCPU {
-    pub fn new(bus: VAXBus) -> Self {
+impl<Bus: VAXBus> VAXCPU<Bus> {
+    pub fn new() -> Self {
         VAXCPU {
-            gpr: [Wrapping(0); 16],
-            psl: PSL(0),
-            bus,
+            regfile: VAXRegisterFile::new(),
 
-            last_read: None,
-            last_read_data: 0xDEADBEEF,
             halted: false,
+            bus: None,
+
+            cur_cycle: Cycles(0),
         }
     }
 
-    pub fn pc(&self) -> Wrapping<u32> {
-        self.gpr[15]
+    pub fn halt(&mut self) {
+        self.halted = true;
     }
 
-    pub fn pc_mut(&mut self) -> &mut Wrapping<u32> {
-        &mut self.gpr[15]
+    pub fn halted(&self) -> bool {
+        self.halted
     }
 
-    pub fn set_pc(&mut self, new: Wrapping<u32>) {
-        self.gpr[15] = new;
+    pub fn give_bus(&mut self, bus: Bus) {
+        if let Some(_) = self.bus {
+            panic!("Attempted to give CPU that already has a bus a bus.");
+        }
+        self.bus = Some(bus);
     }
 
-    pub fn sp(&self) -> Wrapping<u32> {
-        self.gpr[14]
+    pub fn take_bus(&mut self) -> Option<Bus> {
+        let mut v = None;
+        std::mem::swap(&mut v, &mut self.bus);
+        v
     }
 
-    pub fn sp_mut(&mut self) -> &mut Wrapping<u32> {
-        &mut self.gpr[14]
-    }
+    pub fn read_val<T: ByteRepr>(&mut self, addr: u32) ->  Result<T, Error> {
+        let bus = (&mut self.bus).as_mut().expect("No bus!");
 
-    pub fn set_sp(&mut self, new: Wrapping<u32>) {
-        self.gpr[14] = new;
-    }
-
-    pub fn gpr(&self) -> &[Wrapping<u32>;16] {
-        &self.gpr
-    }
-
-    pub fn gpr_mut(&mut self) -> &mut [Wrapping<u32>;16] {
-        &mut self.gpr
-    }
-
-    pub fn set_gpr(&mut self, gpr: [Wrapping<u32>; 16]) {
-        self.gpr = gpr;
-    }
-
-    pub fn psl(&self) -> PSL {
-        self.psl
-    }
-
-    pub fn psl_mut(&mut self) -> &mut PSL {
-        &mut self.psl
-    }
-
-    pub fn set_psl(&mut self, new: PSL) {
-        self.psl = new;
-    }
-}
-
-impl VAXCPU {
-
-    pub fn read_val<T: ByteRepr + Clone>(&mut self, addr: usize) -> (Cycles, Result<T, ()>) {
-        let tag = VAXBusTag {
-            priv_mode: PrivilegeMode::Kernel, //FIXME: properly read priv mode from PSL
-        };
-
-        let (cycles, res) = self.bus.read_val_tagged(addr, tag);
-    
-        match res {
-            Ok((v, _)) => {
-                return (cycles, Ok(v));
-            }
-            Err(_) => {
-                todo!();
-            }
+        if self.regfile.get_mapen() {
+            todo!()
+        } else {
+            let (cyc, res) = bus.read_val_tagged(addr as usize, ());
+            let out: T = res.unwrap().0; 
+            self.cur_cycle += cyc;
+            Ok(out)
         }
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::bus::VAXBus;
+    pub fn write_val<T: ByteRepr>(&mut self, addr: u32, val: T) -> Result<(), Error> {
+        let bus = (&mut self.bus).as_mut().expect("No bus!");
 
-    #[test]
-    fn gpr() {
-        let mut cpu = VAXCPU::new(VAXBus::new(0, 0, 0, 0));
-        let a = cpu.gpr[3];
-        *cpu.pc_mut() = a + Wrapping(1);
-        cpu.gpr_mut()[2] += Wrapping(5);
+        if self.regfile.get_mapen() {
+            todo!()
+        } else {
+            let (cyc, _) = bus.write_val_tagged(addr as usize, val, ());
+            self.cur_cycle += cyc;
+            Ok(())
+        }
+    }
+
+    pub fn can_read_val<T: ByteRepr>(&mut self, _addr: u32) -> Result<(), Error> {
+        if self.regfile.get_mapen() {
+            todo!()
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn can_write_val<T: ByteRepr>(&mut self, _addr: u32) -> Result<(), Error> {
+        if self.regfile.get_mapen() {
+            todo!()
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn commit_flags(&mut self, flags: CVZN) {
+        self.regfile.get_psl_mut().set_c(flags.get_c());
+        self.regfile.get_psl_mut().set_v(flags.get_v());
+        self.regfile.get_psl_mut().set_z(flags.get_z());
+        self.regfile.get_psl_mut().set_n(flags.get_n());
     }
 }

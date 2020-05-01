@@ -4,5 +4,18 @@ members = [
     "emutk",
     "emutk-core",
     "emutk-vax",
+    "emutk-z80",
     "emutk-testing",
+    "emutk-sh2",
 ]
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+
+[profile.bench]
+lto = true
+opt-level = 3
+codegen-units = 1
+incremental = false

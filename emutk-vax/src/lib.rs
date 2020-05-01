@@ -1,11 +1,16 @@
 #![feature(test)]
+
 extern crate test;
 
-pub mod operands;
-pub mod instructiontypes;
 pub mod cpu;
 pub mod bus;
 pub mod mmu;
+mod error;
+pub use error::*;
+mod arith;
+pub use arith::*;
+
+
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(u8)]

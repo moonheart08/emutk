@@ -5,33 +5,33 @@ pub trait Splitable<T: Sized + Copy + Clone + Default>: Sized + Copy + Clone + p
     fn split_be(self) -> [T; 2];
     fn join_be(halves: [T; 2]) -> Self;
 
-    fn modify_lower_le(self, val: T) -> Self {
+    fn modify_lower_le(&mut self, val: T) {
         let mut old = self.split_le();
         old[0] = val;
-        Self::join_le(old)
+        *self = Self::join_le(old);
     }
 
-    fn modify_lower_be(self, val: T) -> Self {
+    fn modify_lower_be(&mut self, val: T) {
         let mut old = self.split_be();
         old[0] = val;
-        Self::join_be(old)
+        *self = Self::join_be(old);
     }
 
-    fn modify_upper_le(self, val: T) -> Self {
+    fn modify_upper_le(&mut self, val: T) {
         let mut old = self.split_le();
         old[1] = val;
-        Self::join_le(old)
+        *self = Self::join_le(old);
     }
 
-    fn modify_upper_be(self, val: T) -> Self {
+    fn modify_upper_be(&mut self, val: T) {
         let mut old = self.split_be();
         old[0] = val;
-        Self::join_be(old)
+        *self = Self::join_be(old);
     }
 
-    fn swap_halves(self) -> Self {
+    fn swap_halves(&mut self) {
         let old = self.split_le();
-        Self::join_be(old) // Endianness magic trick
+        *self = Self::join_be(old); // Endianness magic trick
     }
 }
 
@@ -53,7 +53,7 @@ impl Splitable<u8> for u16 {
     }
 }
 
-//TODO: Implement for u32, u64, and u128. Figure out how to make it "sealed" so it can't be implemented by others.
+//TODO: Implement for u32, u64, and u128.
 
 mod private {
     pub trait Sealed {}

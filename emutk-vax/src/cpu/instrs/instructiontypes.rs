@@ -224,8 +224,6 @@ pub enum InstructionType {
     POPR = 0xBA,
     PUSHR = 0xBB,
 
-    XFC = 0xFC,
-
     // Queue instructions
 
     INSQHI = 0x5C,
@@ -386,7 +384,7 @@ impl InstructionType {
         }
     }
 
-    pub fn instr_len(self) -> usize {
+    pub fn opcode_len(self) -> usize {
         let dat = self.to_u16().unwrap();
         if (dat & 0xFF00) != 0 {
             2
