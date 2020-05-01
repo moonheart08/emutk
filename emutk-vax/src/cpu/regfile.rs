@@ -231,8 +231,12 @@ impl VAXRegisterFile {
 
     pub fn write_gpr_ext<T: VAXNum>(&mut self, start_gpr: u8, value: T)
     {
-            if T::BYTE_LEN <= 4 {
+            if T::BYTE_LEN == 4 {
                 self.write_gpr(start_gpr, value.as_());
+            } else if T::BYTE_LEN < 4 {
+                const MASKS: &[u32] = &[0xFFFF_FF00, 0xFFFF_0000, 0xFF00_0000];
+                let old = self.read_gpr(start_gpr);
+                self.write_gpr(start_gpr, old & MASKS[T::BYTE_LEN-1] | value.as_());
             } else {
                 let gpr_count = T::BYTE_LEN / 4;
                 if start_gpr as usize + gpr_count - 1 > 13 {
@@ -293,5 +297,19 @@ impl VAXRegisterFile {
             /// Translation Buffer Check
             tbchk: 0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn register_widths() {
+        let mut regs = VAXRegisterFile::new();
+        regs.write_gpr_ext(0, 0xF0_00_00_00_u32);
+        regs.write_gpr_ext(0, 0x0F_00_00_00_u32);
+        regs.write_gpr_ext(0, 0xFF_00_u16);
+        regs.write_gpr_ext::<u8>(0, 0xFF_u8);
+        assert_eq!(regs.get_r0(), 0x0F_00_FF_FF_u32);
     }
 }
