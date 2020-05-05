@@ -4,6 +4,21 @@ use emutk_core::{
     ByteRepr,
 };
 
+pub trait VAXDevice<Err, InTag, OutTag> {
+    /// Length of this device's address space in 512b pages.
+    fn get_address_space_page_length(&self) -> usize;
+    /// Read a piece of data from the bus at the specified address with tags.
+    /// ## Panics
+    /// Read sizes larger than the device's page length will panic.
+    fn read_val_tagged<T: ByteRepr + Clone>(&mut self, addr: usize, tag: InTag)
+        -> (Cycles, Result<(T, OutTag), Err>);
+    /// Write a piece of data to the bus at the specified address with tags.
+    /// ## Panics
+    /// Write sizes larger than the device's page length will panic.
+    fn write_val_tagged<T: ByteRepr + Clone>(&mut self, addr: usize, data: T, tag: InTag)
+        -> (Cycles, Result<OutTag, Err>);
+}
+
 pub trait VAXBus: TaggedBus<(), (), ()> {}
 
 impl<T> VAXBus for T
@@ -11,7 +26,6 @@ impl<T> VAXBus for T
 pub struct RAMBus {
     ram: Vec<u8>,
 }
-
 
 impl RAMBus {
     pub fn new(size: usize) -> RAMBus {

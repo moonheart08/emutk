@@ -25,18 +25,18 @@ pub enum PrivilegeMode {
     User = 3,
 }
 
-pub struct VAXCPU<Bus: VAXBus> {
+pub struct VAXCPU<'bus, Bus: VAXBus> {
     regfile: VAXRegisterFile,
 
 
     halted: bool,
 
-    bus: Option<Bus>,
+    bus: Option<&'bus mut Bus>,
 
     cur_cycle: Cycles,
 }
 
-impl<Bus: VAXBus> VAXCPU<Bus> {
+impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
     pub fn new() -> Self {
         VAXCPU {
             regfile: VAXRegisterFile::new(),
@@ -56,14 +56,14 @@ impl<Bus: VAXBus> VAXCPU<Bus> {
         self.halted
     }
 
-    pub fn give_bus(&mut self, bus: Bus) {
+    pub fn give_bus(&mut self, bus: &'bus mut Bus) {
         if let Some(_) = self.bus {
             panic!("Attempted to give CPU that already has a bus a bus.");
         }
         self.bus = Some(bus);
     }
 
-    pub fn take_bus(&mut self) -> Option<Bus> {
+    pub fn take_bus(&mut self) -> Option<&'bus mut Bus> {
         let mut v = None;
         std::mem::swap(&mut v, &mut self.bus);
         v
@@ -111,9 +111,11 @@ impl<Bus: VAXBus> VAXCPU<Bus> {
     }
 
     pub fn commit_flags(&mut self, flags: CVZN) {
-        self.regfile.get_psl_mut().set_c(flags.get_c());
-        self.regfile.get_psl_mut().set_v(flags.get_v());
-        self.regfile.get_psl_mut().set_z(flags.get_z());
-        self.regfile.get_psl_mut().set_n(flags.get_n());
+        let mut psl = *self.regfile.get_psl();
+        psl.set_c(flags.get_c());
+        psl.set_v(flags.get_v());
+        psl.set_z(flags.get_z());
+        psl.set_n(flags.get_n());
+        self.regfile.set_psl(psl);
     }
 }

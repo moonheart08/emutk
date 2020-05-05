@@ -1,0 +1,4 @@
+.text
+start:
+    .byte 0x96, 0x8f, 0x00
+    bneq    start

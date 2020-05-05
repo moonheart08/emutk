@@ -52,9 +52,8 @@ impl CVZN {
 }
 
 pub trait VAXNum: ByteReprNum + PrimInt + AsPrimitive<u32> + PrimitiveFrom<u8> + PrimitiveFrom<u32>
-    + std::fmt::LowerHex
+    + std::fmt::LowerHex + num::traits::WrappingAdd + num::traits::WrappingSub + num::traits::WrappingMul
 {
-    fn from_u8(val: u8) -> Self;
     fn flagged_add(self, other: Self) -> (CVZN, Self);
     fn flagged_sub(self, other: Self) -> (CVZN, Self);
     fn flagged_mul(self, other: Self) -> (CVZN, Self);
@@ -88,10 +87,6 @@ macro_rules! impl_vaxnum {
     ($($num:ty, $signednum:ty);+) => {
         $(
         impl VAXNum for $num {
-            fn from_u8(val: u8) -> Self {
-                val as $num
-            }
-
             fn flagged_add(self, other: Self) -> (CVZN, Self) {
                 let mut flags = CVZN::blank();
                 let (val, carry) = self.overflowing_add(other);

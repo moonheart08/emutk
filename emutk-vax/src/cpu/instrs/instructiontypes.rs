@@ -12,6 +12,14 @@ pub enum InstructionType {
     ADDW3 = 0xA1,
     ADDL2 = 0xC0,
     ADDL3 = 0xC1,
+    #[cfg(feature = "64bit")]
+    ADDQ2 = 0x80FD,
+    #[cfg(feature = "64bit")]
+    ADDQ3 = 0x81FD,
+    #[cfg(feature = "128bit")]
+    ADDO2 = 0xA0FD,
+    #[cfg(feature = "128bit")]
+    ADDO3 = 0xA1FD,
 
     ADWC = 0xD8,
 
@@ -24,6 +32,14 @@ pub enum InstructionType {
     BICW3 = 0xAB,
     BICL2 = 0xCA,
     BICL3 = 0xCB,
+    #[cfg(feature = "64bit")]
+    BICQ2 = 0x8AFD,
+    #[cfg(feature = "64bit")]
+    BICQ3 = 0x8BFD,
+    #[cfg(feature = "128bit")]
+    BICO2 = 0xAAFD,
+    #[cfg(feature = "128bit")]
+    BICO3 = 0xABFD,
 
     BISB2 = 0x88,
     BISB3 = 0x89,
@@ -31,10 +47,22 @@ pub enum InstructionType {
     BISW3 = 0xA9,
     BISL2 = 0xC8,
     BISL3 = 0xC9,
+    #[cfg(feature = "64bit")]
+    BISQ2 = 0x88FD,
+    #[cfg(feature = "64bit")]
+    BISQ3 = 0x89FD,
+    #[cfg(feature = "128bit")]
+    BISO2 = 0xA8FD,
+    #[cfg(feature = "128bit")]
+    BISO3 = 0xA9FD,
 
     BITB = 0x93,
     BITW = 0xB3,
     BITL = 0xD3,
+    #[cfg(feature = "64bit")]
+    BITQ = 0x93FD,
+    #[cfg(feature = "128bit")]
+    BITO = 0xB3FD,
 
     CLRB = 0x94,
     CLRW = 0xB4,
@@ -45,6 +73,10 @@ pub enum InstructionType {
     CMPB = 0x91,
     CMPW = 0xB1,
     CMPL = 0xD1,
+    #[cfg(feature = "64bit")]
+    CMPQ = 0x91FD,
+    #[cfg(feature = "128bit")]
+    CMPO = 0xB1FD,
 
     CVTBW = 0x99,
     CVTBL = 0x98,
@@ -52,10 +84,15 @@ pub enum InstructionType {
     CVTWL = 0x32,
     CVTLB = 0xF6,
     CVTLW = 0xF7,
+    //TODO: allocate Quad and Octa conversion instructions.
 
     DECB = 0x97,
     DECW = 0xB7,
     DECL = 0xD7,
+    #[cfg(feature = "64bit")]
+    DECQ = 0x97FD,
+    #[cfg(feature = "128bit")]
+    DECO = 0xB7FD,
 
     DIVB2 = 0x86,
     DIVB3 = 0x87,
@@ -63,6 +100,15 @@ pub enum InstructionType {
     DIVW3 = 0xA7,
     DIVL2 = 0xC6,
     DIVL3 = 0xC7,
+    #[cfg(feature = "64bit")]
+    DIVQ2 = 0x86FD,
+    #[cfg(feature = "64bit")]
+    DIVQ3 = 0x87FD,
+    #[cfg(feature = "128bit")]
+    DIVO2 = 0xA6FD,
+    #[cfg(feature = "128bit")]
+    DIVO3 = 0xA7FD,
+
 
     EDIV = 0x7B,
     EMUL = 0x7A,
@@ -70,14 +116,27 @@ pub enum InstructionType {
     INCB = 0x96,
     INCW = 0xB6,
     INCL = 0xD6,
+    #[cfg(feature = "64bit")]
+    INCQ = 0x96FD,
+    #[cfg(feature = "128bit")]
+    INCO = 0xB6FD,
+
 
     MCOMB = 0x92,
     MCOMW = 0xB2,
     MCOML = 0xD2,
+    #[cfg(feature = "64bit")]
+    MCOMQ = 0x92FD,
+    #[cfg(feature = "128bit")]
+    MCOMO = 0xB2FD,
 
     MNEGB = 0x8E,
     MNEGW = 0xAE,
     MNEGL = 0xCE,
+    #[cfg(feature = "64bit")]
+    MNEGQ = 0x8EFD,
+    #[cfg(feature = "128bit")]
+    MNEGO = 0xAEFD,
 
     MOVB = 0x90,
     MOVW = 0xB0,
@@ -88,6 +147,7 @@ pub enum InstructionType {
     MOVZBW = 0x9B,
     MOVZBL = 0x9A,
     MOVZWL = 0x3C,
+    //TODO: allocate Qud and Octa zero extend instructions.
 
     MULB2 = 0x84,
     MULB3 = 0x85,
@@ -95,10 +155,22 @@ pub enum InstructionType {
     MULW3 = 0xA5,
     MULL2 = 0xC4,
     MULL3 = 0xC5,
+    #[cfg(feature = "64bit")]
+    MULQ2 = 0x84FD,
+    #[cfg(feature = "64bit")]
+    MULQ3 = 0x85FD,
+    #[cfg(feature = "128bit")]
+    MULO2 = 0xA4FD,
+    #[cfg(feature = "128bit")]
+    MULO3 = 0xA5FD,
 
     PUSHL = 0xDD,
+    #[cfg(feature = "64bit")]
+    PUSHQ = 0xDDFD,
 
     ROTL = 0x9C,
+    #[cfg(feature = "64bit")]
+    ROTQ = 0x9CFD,
     
     SBWC = 0xD9,
 
@@ -108,10 +180,22 @@ pub enum InstructionType {
     SUBW3 = 0xA3,
     SUBL2 = 0xC2,
     SUBL3 = 0xC3,
+    #[cfg(feature = "64bit")]
+    SUBQ2 = 0x82FD,
+    #[cfg(feature = "64bit")]
+    SUBQ3 = 0x83FD,
+    #[cfg(feature = "128bit")]
+    SUBO2 = 0xA2FD,
+    #[cfg(feature = "128bit")]
+    SUBO3 = 0xA3FD,
 
     TSTB = 0x95,
     TSTW = 0xB5,
     TSTL = 0xD5,
+    #[cfg(feature = "64bit")]
+    TSTQ = 0x95FD,
+    #[cfg(feature = "128bit")]
+    TSTO = 0xB5FD,
     
     XORB2 = 0x8C,
     XORB3 = 0x8D,
@@ -119,6 +203,14 @@ pub enum InstructionType {
     XORW3 = 0xAD,
     XORL2 = 0xCC,
     XORL3 = 0xCD,
+    #[cfg(feature = "64bit")]
+    XORQ2 = 0x8CFD,
+    #[cfg(feature = "64bit")]
+    XORQ3 = 0x8DFD,
+    #[cfg(feature = "128bit")]
+    XORO2 = 0xACFD,
+    #[cfg(feature = "128bit")]
+    XORO3 = 0xADFD,
 
     MOVAB = 0x9E,
     MOVAW = 0x3E,
@@ -165,8 +257,8 @@ pub enum InstructionType {
     BLEQU = 0x1B,
     BVC = 0x1C,
     BVS = 0x1D,
-    BCC = 0x1E,
-    BCS = 0x1F,
+    BGEQU = 0x1E,
+    BLSSU = 0x1F,
 
     BBS = 0xE0,
     BBC = 0xE1,
@@ -233,7 +325,7 @@ pub enum InstructionType {
     REMQTI = 0x5F,
     REMQUE = 0x0F,
 
-    //Floating point
+    // Floating point
 
     ADDF2 = 0x40,
     ADDF3 = 0x41,
@@ -355,7 +447,7 @@ pub enum InstructionType {
     TSTG = 0x53FD,
     TSTH = 0x73FD,
     
-    /// Instructions for exceptions and interrupts.
+    // Instructions for exceptions and interrupts.
     
     REI = 0x02,
 
@@ -364,10 +456,12 @@ pub enum InstructionType {
     CHMS = 0xBE,
     CHMU = 0xBF,
 
-    /// Instructions for processes.
+    // Instructions for processes.
 
     LDPCTX = 0x06,
     SVPCTX = 0x07,
+
+    //
 
     MTPR = 0xDA,
     MFPR = 0xDB,
@@ -386,7 +480,7 @@ impl InstructionType {
 
     pub fn opcode_len(self) -> usize {
         let dat = self.to_u16().unwrap();
-        if (dat & 0xFF00) != 0 {
+        if  dat > 0xFF {
             2
         } else {
             1

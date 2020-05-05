@@ -12,5 +12,11 @@ num-traits = "^0.2"
 num-derive = "^0.3"
 bytemuck = "^1.2"
 emutk-core = { path = "../emutk-core" }
-lru = "^0.4"
+bit-vec = "0.6"
 
+[features]
+default = ["noncompliant_extensions"]
+
+noncompliant_extensions = ["64bit", "128bit"]
+64bit = []
+128bit = []

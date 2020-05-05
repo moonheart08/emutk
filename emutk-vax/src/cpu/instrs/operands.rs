@@ -82,7 +82,7 @@ impl OperandMode {
         match self {
             Literal(_) | Register(_) | RegisterDeferred(_) |
             Autodecrement(_) | Autoincrement(_) | AutoincrementDeferred(_) =>
-                1, // returns an Option. always Some.
+                1, 
             ByteDisplacement(_) | ByteDisplacementDeferred(_) =>
                 2,
             WordDisplacement(_) | WordDisplacementDeferred(_) =>
@@ -252,5 +252,18 @@ impl<T: VAXNum>  UnresolvedOperand<T> {
     {
         self.validate(cpu)?;
         Ok(self.execute_read(cpu))
+    }
+
+    pub fn address(self) -> Result<u32, Error>
+    {
+        match self {
+            UnresolvedOperand::Mem(addr) => {
+                Ok(addr)
+            }
+            UnresolvedOperand::Value(_, _) => {
+                Err(Error::new_address_mode_fault())
+            }
+            _ => unreachable!()
+        }
     }
 }

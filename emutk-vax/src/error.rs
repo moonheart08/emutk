@@ -43,6 +43,24 @@ impl Error {
             data: [0; 2],
         }
     }
+    pub fn new_reserved_instruction_fault() -> Self {
+        Error {
+            kind: ErrorKind::ReservedInstruction,
+            data: [0; 2],
+        }
+    }
+    pub fn new_reserved_operand_fault() -> Self {
+        Error {
+            kind: ErrorKind::ReservedOperand,
+            data: [0; 2],
+        }
+    }
+    pub fn new_privileged_instruction_fault() -> Self {
+        Error {
+            kind: ErrorKind::PrivilegedInstruction,
+            data: [0; 2],
+        }
+    }
 }
 
 impl fmt::Display for Error {

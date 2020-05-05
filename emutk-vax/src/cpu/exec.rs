@@ -1,6 +1,8 @@
 use crate::cpu::VAXCPU;
 
 use crate::bus::VAXBus;
+#[cfg(test)]
+use crate::bus::RAMBus;
 use crate::Error;
 
 use crate::cpu::instrs::InstructionType;
@@ -8,7 +10,7 @@ use crate::cpu::instrs::execute_instr;
 
 use emutk_core::cycles::Cycles;
 
-impl<B: VAXBus> VAXCPU<B> {
+impl<B: VAXBus> VAXCPU<'_, B> {
     pub fn run_tick(&mut self) -> Result<(), Error> {
         if self.halted == true {
             return Ok(());
@@ -25,10 +27,26 @@ impl<B: VAXBus> VAXCPU<B> {
         }
         let mut cyc = Cycles(0);
         execute_instr(instr, self, &mut cyc)?;
-
         Ok(())
     }
 }
+
+#[cfg(test)]
+fn simple_test_cpu_with_data(dat: &[u8]) -> (VAXCPU<RAMBus>, RAMBus) {
+    let cpu = VAXCPU::new();
+    let mut bus = RAMBus::new(dat.len()+1024);
+    let buf = bus.ram_mut();
+    buf[0..dat.len()].copy_from_slice(dat);
+    (cpu, bus)
+}
+
+#[cfg(test)]
+fn simple_test_cpu<'a>() -> (VAXCPU<'a, RAMBus>, RAMBus) {
+    let cpu = VAXCPU::new();
+    let bus = RAMBus::new(8192);
+    (cpu, bus)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -38,14 +56,11 @@ mod tests {
 
     #[test]
     fn exectest() {
-        let mut cpu = VAXCPU::new();
-        let mut bus = RAMBus::new(8192);
-        let rom = bus.ram_mut();
-        let bytes = &[0xD0, 0x8F, 0x01, 0x00, 0x00, 0x00, 0x50];
-        (*rom)[0..7].copy_from_slice(bytes);
+        let dat = &[0xD0, 0x8F, 0x01, 0x00, 0x00, 0x00, 0x50];
+        let (mut cpu, mut bus) = simple_test_cpu_with_data(dat);
         //(*rom)[8..15].copy_from_slice(bytes);
 
-        cpu.give_bus(bus);
+        cpu.give_bus(&mut bus);
 
         while cpu.halted == false {
             match cpu.run_tick() {
@@ -59,6 +74,35 @@ mod tests {
     }
 
     #[test]
+    fn loop_test() {
+        let dat = &[0x96, 0x8f, 0x00, 0x12, 0xfb, 0x00];
+        let (mut cpu, mut bus) = simple_test_cpu_with_data(dat);
+        //(*rom)[8..15].copy_from_slice(bytes);
+
+        cpu.give_bus(&mut bus);
+
+        let mut ticks_left = 1024;
+
+        while cpu.halted == false {
+            if ticks_left == 0 {
+                panic!("Loop never exited!");
+            }
+            match cpu.run_tick() {
+                Ok(()) => {
+                    ticks_left -= 1;
+                },
+                Err(e) => {
+                    panic!("{:?}", e);
+                }
+            }
+        }
+
+        if ticks_left > 1000 {
+            panic!("Loop didn't even work!");
+        }
+    }
+
+    #[test]
     fn exectest2() {
         let mut cpu = VAXCPU::new();
         let mut bus = RAMBus::new(8192);
@@ -69,10 +113,10 @@ mod tests {
             // MULL2 R0, R0
             0xC4, 0x50, 0x50,
         ];
-        (*rom)[0..bytes.len()].copy_from_slice(bytes);
+        rom[0..bytes.len()].copy_from_slice(bytes);
         //(*rom)[8..15].copy_from_slice(bytes);
 
-        cpu.give_bus(bus);
+        cpu.give_bus(&mut bus);
 
         while cpu.halted == false {
             match cpu.run_tick() {
@@ -107,7 +151,7 @@ mod tests {
                 0xD4, 0x70,
             ];
         rom[..(bytes.len())*32].chunks_mut(bytes.len()).for_each(|ch| ch.copy_from_slice(bytes));
-        cpu.give_bus(bus);
+        cpu.give_bus(&mut bus);
 
         b.iter(|| {
             cpu.halted = false;

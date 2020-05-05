@@ -2,6 +2,7 @@ use crate::cpu::{
     PSL,
 };
 use crate::VAXNum;
+use crate::Error;
 use bytemuck::{
     cast_slice,
     cast_slice_mut,
@@ -154,6 +155,10 @@ impl VAXRegisterFile {
     pub fn get_psl_mut(&mut self) -> &mut PSL {
         &mut self.psl
     }
+
+    pub fn set_psl(&mut self, v: PSL) {
+        self.psl = v;
+    }
 }
 
 /// CPU-level register file reads/writes
@@ -200,7 +205,7 @@ impl VAXRegisterFile {
             15 => {
                 // Anyone who writes VAX ASM that invokes this 
                 // particular set better be ready for it to break.
-                self.pc = val 
+                self.pc = val;
             }
             16u8..=std::u8::MAX => unreachable!(),
             v => self.gpr[v as usize] = val,   
@@ -251,6 +256,39 @@ impl VAXRegisterFile {
             }
         
     }
+
+    pub fn read_msr(&self, mid: u16) -> Result<u32, Error> {
+        match mid {
+            0 => Ok(self.get_ksp()),
+            1 => Ok(self.get_esp()),
+            2 => Ok(self.get_ssp()),
+            3 => Ok(self.get_usp()),
+            16 => Ok(self.get_pcbb()),
+            17 => Ok(self.get_scbb()),
+            18 => Ok(self.psl.get_ipl() as u32),
+            56 => Ok(self.get_mapen() as u32),
+
+            _ => Err(Error::new_reserved_operand_fault()),
+        }
+    }
+
+    pub fn write_msr(&mut self, mid: u16, val: u32) -> Result<(), Error> {
+        match mid {
+            0 => self.set_ksp(val),
+            1 => self.set_esp(val),
+            2 => self.set_ssp(val),
+            3 => self.set_usp(val),
+            35 => { // debug things using TXDB
+                use std::io::Write;
+                let out = std::io::stdout();
+                let mut handle = out.lock();
+                handle.write(&[val as u8]).expect("ohno");
+                handle.flush().expect("foo");
+            }
+            _ => return Err(Error::new_reserved_operand_fault()),
+        }
+        Ok(())
+    }
 }
 
 impl VAXRegisterFile {
@@ -260,7 +298,7 @@ impl VAXRegisterFile {
             stkptrs: [0;5],
         
             pc: 0,
-            psl: PSL(0),
+            psl: PSL(0x041F0000),
         
             // MMU things.
             /// P0 Base Register
