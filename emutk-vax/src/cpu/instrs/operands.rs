@@ -132,7 +132,6 @@ impl OperandMode {
                 let v = cpu.regfile.read_gpr(*r);
                 Ok(UnresolvedOperand::Mem(v))
             },
-            // increment/decrement handled in .finalize()
             Autoincrement(r) => {
                 let v = cpu.regfile.read_gpr(*r);
                 cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
@@ -201,6 +200,7 @@ pub enum UnresolvedOperand<T: VAXNum> {
 }
 
 impl<T: VAXNum>  UnresolvedOperand<T> {
+    #[inline]
     pub fn validate<B: VAXBus>(&mut self, cpu: &mut VAXCPU<B>) -> Result<(), Error> 
     {
         match self {
@@ -216,7 +216,8 @@ impl<T: VAXNum>  UnresolvedOperand<T> {
             UnresolvedOperand::Value(_,_) => Ok(()),
         }
     }
-
+    
+    #[inline]
     pub fn execute_write<B: VAXBus>(&mut self, cpu: &mut VAXCPU<B>, value: T) 
     {
         match self {
@@ -230,6 +231,7 @@ impl<T: VAXNum>  UnresolvedOperand<T> {
         }
     }
 
+    #[inline]
     pub fn write<B: VAXBus>(mut self, cpu: &mut VAXCPU<B>, value: T) -> Result<(), Error>
     {
         self.validate(cpu)?;
@@ -237,6 +239,7 @@ impl<T: VAXNum>  UnresolvedOperand<T> {
         Ok(())
     }
 
+    #[inline]
     pub fn execute_read<B: VAXBus>(self, cpu: &mut VAXCPU<B>) -> T
     {
         match self {
@@ -248,12 +251,14 @@ impl<T: VAXNum>  UnresolvedOperand<T> {
         }
     }
 
+    #[inline]
     pub fn read<B: VAXBus>(mut self, cpu: &mut VAXCPU<B>) -> Result<T, Error>
     {
         self.validate(cpu)?;
         Ok(self.execute_read(cpu))
     }
 
+    #[inline]
     pub fn address(self) -> Result<u32, Error>
     {
         match self {

@@ -7,6 +7,13 @@ use bytemuck::{
     cast_slice,
     cast_slice_mut,
 };
+use num::traits::cast::AsPrimitive;
+
+use std::sync::mpsc::{Sender,Receiver};
+pub struct SerialControllerHandles {
+    txdb: Sender<u8>,
+    rxdb: Receiver<u8>,
+}
 
 pub struct VAXRegisterFile {
     gpr: [u32;14],
@@ -50,6 +57,11 @@ pub struct VAXRegisterFile {
     /// Translation Buffer Check
     tbchk: u32,
 
+    // Common MSR
+    ///TODO: Figure out usage.
+    conpsl: u32,
+    ///TODO: Figure out usage.
+    conpc: u32,
 }
 
 macro_rules! gpr_funcs {
@@ -138,6 +150,7 @@ impl VAXRegisterFile {
         ; tbia, get_tbia, set_tbia
         ; tbis, get_tbis, set_tbis
         ; tbchk, get_tbchk, set_tbchk
+        ; conpsl, get_conpsl, set_conpsl
     );
     
     pub fn get_mapen(&self) -> bool {
@@ -147,7 +160,7 @@ impl VAXRegisterFile {
     pub fn set_mapen(&mut self, val: bool) {
         self.mapen = val
     }
-
+    #[inline]
     pub fn get_psl(&self) -> &PSL {
         &self.psl
     }
@@ -155,7 +168,7 @@ impl VAXRegisterFile {
     pub fn get_psl_mut(&mut self) -> &mut PSL {
         &mut self.psl
     }
-
+    #[inline]
     pub fn set_psl(&mut self, v: PSL) {
         self.psl = v;
     }
@@ -263,12 +276,25 @@ impl VAXRegisterFile {
             1 => Ok(self.get_esp()),
             2 => Ok(self.get_ssp()),
             3 => Ok(self.get_usp()),
+            4 => Ok(self.get_isp()),
+            8 => Ok(self.get_p0br()),
+            9 => Ok(self.get_p0lr()),
+            10 => Ok(self.get_p1br()),
+            11 => Ok(self.get_p1lr()),
+            12 => Ok(self.get_sbr()),
+            13 => Ok(self.get_slr()),
             16 => Ok(self.get_pcbb()),
             17 => Ok(self.get_scbb()),
             18 => Ok(self.psl.get_ipl() as u32),
+            43 => Ok(self.get_conpsl()),
             56 => Ok(self.get_mapen() as u32),
-
-            _ => Err(Error::new_reserved_operand_fault()),
+            #[cfg(not(feature = "sys_debug"))]
+            _ => return Err(Error::new_reserved_operand_fault()),
+            #[cfg(feature = "sys_debug")]
+            v => {
+                println!("Accessed unrecognized register {}", v);
+                return Err(Error::new_reserved_operand_fault());
+            }
         }
     }
 
@@ -278,6 +304,16 @@ impl VAXRegisterFile {
             1 => self.set_esp(val),
             2 => self.set_ssp(val),
             3 => self.set_usp(val),
+            4 => self.set_isp(val),
+            8 => self.set_p0br(val),
+            9 => self.set_p0lr(val),
+            10 => self.set_p1br(val),
+            11 => self.set_p1lr(val),
+            12 => self.set_sbr(val),
+            13 => self.set_slr(val),
+            16 => self.set_pcbb(val),
+            17 => self.set_scbb(val),
+            43 => self.set_conpsl(val),
             35 => { // debug things using TXDB
                 use std::io::Write;
                 let out = std::io::stdout();
@@ -285,7 +321,13 @@ impl VAXRegisterFile {
                 handle.write(&[val as u8]).expect("ohno");
                 handle.flush().expect("foo");
             }
+            #[cfg(not(feature = "sys_debug"))]
             _ => return Err(Error::new_reserved_operand_fault()),
+            #[cfg(feature = "sys_debug")]
+            v => {
+                println!("Accessed unrecognized register {}", v);
+                return Err(Error::new_reserved_operand_fault());
+            }
         }
         Ok(())
     }
@@ -299,41 +341,29 @@ impl VAXRegisterFile {
         
             pc: 0,
             psl: PSL(0x041F0000),
-        
-            // MMU things.
-            /// P0 Base Register
+            
             p0br: 0,
-            /// P0 Length Register
             p0lr: 0,
-            /// P1 Base Register
             p1br: 0,
-            /// P1 Length Register
             p1lr: 0,
         
-            /// System Base Register
             sbr: 0,
-            /// System Length Register
             slr: 0,
         
-            /// Process Control Block Base
             pcbb: 0,
-            /// System Control Block Base
             scbb: 0,
         
-            /// Memory Management Enable
             mapen: false,
         
-            /// Software Interrupt Request
             sirr: 0,
-            /// Software Interrupt Summary
             sisr: 0,
         
-            /// Translation Buffer Invalidate All
             tbia: 0,
-            /// Translation Buffer Invalidate Single
             tbis: 0,
-            /// Translation Buffer Check
             tbchk: 0,
+
+            conpc: 0,
+            conpsl: 0,
         }
     }
 }

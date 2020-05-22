@@ -4,6 +4,7 @@ use crate::bus::VAXBus;
 use crate::Error;
 use crate::VAXNum;
 
+
 pub fn parse_read_operand
     <B: VAXBus, T: VAXNum>
     (cpu: &mut VAXCPU<B>)
@@ -153,7 +154,7 @@ pub fn push<B: VAXBus, T: VAXNum>(cpu: &mut VAXCPU<B>, val: T) -> Result<(), Err
     cpu.regfile.set_sp(sp.wrapping_sub(T::BYTE_LEN as u32));
     Ok(())
 }
-
+#[inline]
 pub fn pop<B: VAXBus, T: VAXNum>(cpu: &mut VAXCPU<B>) -> Result<T, Error> {
     let sp = cpu.regfile.get_sp();
     let res = cpu.read_val(sp)?;

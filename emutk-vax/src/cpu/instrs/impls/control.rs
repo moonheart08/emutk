@@ -75,6 +75,104 @@ pub fn instr_branch_cond
     Ok(())
 }
 
+pub fn instr_branch_cond_norzus
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::NOrZUnset)
+}
+
+
+pub fn instr_branch_cond_norzs
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::NOrZSet)
+}
+
+pub fn instr_branch_cond_zus
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::ZUnset)
+}
+
+pub fn instr_branch_cond_zs
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::ZSet)
+}
+
+pub fn instr_branch_cond_nus
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::NUnset)
+}
+
+pub fn instr_branch_cond_ns
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::NSet)
+}
+
+pub fn instr_branch_cond_corzus
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::COrZUnset)
+}
+
+pub fn instr_branch_cond_corzs
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::COrZSet)
+}
+
+pub fn instr_branch_cond_vus
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::VUnset)
+}
+
+pub fn instr_branch_cond_vs
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::VSet)
+}
+
+pub fn instr_branch_cond_cus
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::CUnset)
+}
+
+pub fn instr_branch_cond_cs
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_cond(cpu, cycle_count, BranchCondition::CSet)
+}
+
+
 pub fn instr_branch_low_bit
     <T: VAXBus>
     (cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles, val: bool)
@@ -86,6 +184,22 @@ pub fn instr_branch_low_bit
         jump_with_byte_displacement(cpu, displ);
     }
     Ok(())
+}
+
+pub fn instr_branch_low_bit_true
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_low_bit(cpu, cycle_count, true)
+}
+
+pub fn instr_branch_low_bit_false
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    instr_branch_low_bit(cpu, cycle_count, false)
 }
 
 pub fn instr_branch_byte
@@ -178,7 +292,6 @@ pub fn instr_jsb
     selector.validate(cpu)?;
     let addr = selector.address()?;
     push(cpu, cpu.regfile.get_pc())?;
-    println!("{} | {}", addr, cpu.regfile.get_pc());
     cpu.regfile.set_pc(addr);
     Ok(())
 }

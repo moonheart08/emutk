@@ -16,6 +16,24 @@ pub fn instr_invalid
     return Err(Error::new_reserved_instruction_fault())
 }
 
+pub fn instr_noimpl
+    <T: VAXBus>
+    (_cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    println!("Encountered unimplemented!");
+    return Err(Error::new_reserved_instruction_fault())
+}
+
+
+pub fn instr_nop
+    <T: VAXBus>
+    (_cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    Ok(())
+}
+
 pub fn instr_halt
     <T: VAXBus>
     (cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles)
@@ -25,7 +43,6 @@ pub fn instr_halt
     cpu.halt();
     Ok(())
 }
-
 
 pub fn instr_clr
     <B: VAXBus, T: VAXNum>
@@ -101,5 +118,15 @@ pub fn instr_mtpr
 {
     rr_instr_wrap(cpu, |x: u32, y: u32, cpu: &mut VAXCPU<B>| -> Result<(), Error> {
         cpu.regfile.write_msr(y as u16, x)
+    })
+}
+
+pub fn instr_mfpr
+    <B: VAXBus>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rw_instr_wrap::<B, u32, u32, _>(cpu, |r: u32, cpu: &mut VAXCPU<B>| -> Result<u32, Error> {
+        cpu.regfile.read_msr(r as u16)
     })
 }

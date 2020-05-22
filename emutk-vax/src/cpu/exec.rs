@@ -17,16 +17,11 @@ impl<B: VAXBus> VAXCPU<'_, B> {
         }
 
         let pc = self.regfile.get_pc();
-        let instr = {
-            let by: [u8; 2] = self.read_val(pc)?;
-            InstructionType::from_instrid(by)
-        };
+        let instr = self.read_val(pc)?;
 
-        if let Some(i) = instr {
-            self.regfile.set_pc(pc + i.opcode_len() as u32);
-        }
         let mut cyc = Cycles(0);
         execute_instr(instr, self, &mut cyc)?;
+        self.cur_cycle += cyc;
         Ok(())
     }
 }
@@ -159,14 +154,15 @@ mod tests {
 
             test::black_box(while !cpu.halted() {
                 match cpu.run_tick() {
-                    Ok(()) => {
+                    Ok(_) => {
                     },
                     Err(e) => {
                         panic!("{:?}", e);
                     }
                 }
                 
-            })
+            });
+
         });
     }
 }

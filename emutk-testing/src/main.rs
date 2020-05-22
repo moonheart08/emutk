@@ -1,29 +1,31 @@
-const BOOTLOADER: &[u8] = include_bytes!("../../emutk-vax/vsrc/bootrom/bootloader.bin");
+const BOOTLOADER: &'static [u8] = include_bytes!("../../ka42a_orig.bin");
 
 use emutk_vax::cpu::VAXCPU;
-use emutk_vax::bus::RAMBus;
+use emutk_vax::bus::{
+    MicroVAX3100Bus,
+    RAMSize,
+};
 
-fn simple_test_cpu_with_data(dat: &[u8]) -> (VAXCPU<RAMBus>, RAMBus) {
-    let cpu = VAXCPU::new();
-    let mut bus = RAMBus::new(dat.len()+1024);
-    let buf = bus.ram_mut();
-    buf[0..dat.len()].copy_from_slice(dat);
-    (cpu, bus)
-}
+
 
 fn main() {
-    println!("Executing test VAX program...\n");
+    println!("Attempting to run bootrom!\n");
+    let mut cpu = VAXCPU::new();
+    let mut bus = MicroVAX3100Bus::new(BOOTLOADER, RAMSize::Size32MB);
 
-    let (mut cpu, mut bus) = simple_test_cpu_with_data(BOOTLOADER);
+    cpu.prepare_as_microvax();
+
     cpu.give_bus(&mut bus);
-
+    let mut icount = 0;
     while !cpu.halted() {
         match cpu.run_tick() {
-            Ok(()) => {},
+            Ok(()) => {
+                icount+=1;
+            },
             Err(e) => {
                 panic!("{:?}", e);
             }
         }
     }
-    println!("");
+    println!("Cycles: {} | ICount: {}", cpu.cur_cycle(), icount);
 }

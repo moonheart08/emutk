@@ -10,6 +10,7 @@ impl CVZN {
     pub fn blank() -> CVZN {
         CVZN(0)
     }
+    
     pub fn get_c(self) -> bool {
         (self.0 & 0x01) != 0
     }
@@ -77,7 +78,7 @@ where
     F: AsPrimitive<T>,
     T: 'static + Copy ,
 {
-
+    #[inline]
     fn primitive_from(from:F)->Self{
        from.as_()
     }

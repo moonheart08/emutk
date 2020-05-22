@@ -4,7 +4,6 @@ use crate::cpu::{
 };
 
 use emutk_core::{
-    bus::TaggedBus,
     ByteRepr,
 };
 
@@ -76,8 +75,3 @@ impl PTEProtectionCode {
         }
     }
 }
-
-pub fn translate_address<Bus: TaggedBus<(), (), ()>>(iaddr: u32, cpu: &mut VAXCPU<Bus>) -> u32 {
-    todo!()
-}
-

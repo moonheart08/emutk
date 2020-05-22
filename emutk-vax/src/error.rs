@@ -28,6 +28,7 @@ pub enum ErrorKind {
     KernelStackNotValid, // Also known as "F*CK"
     InterruptStackNotValid, // How to give the BOFH a heart attack.
     MachineCheck, // Emulator did an oopsie.
+    Debug, // Emulation only.
 }
 
 #[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -61,6 +62,13 @@ impl Error {
             data: [0; 2],
         }
     }
+
+    pub fn new_debug_halt() -> Self {
+        Error {
+            kind: ErrorKind::Debug,
+            data: [0; 2],
+        }
+    }
 }
 
 impl fmt::Display for Error {
@@ -87,6 +95,7 @@ impl fmt::Display for Error {
             ErrorKind::KernelStackNotValid => "Kernel Stack Not Valid Abort",
             ErrorKind::InterruptStackNotValid => "Interrupt Stack Not Valid Halt",
             ErrorKind::MachineCheck => "Machine Check Exception",
+            ErrorKind::Debug => "Emulator Debug Halt",
         };
         write!(f, "VAX System Error: {}", dispname)
     }

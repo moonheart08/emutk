@@ -25,7 +25,7 @@ pub enum PrivilegeMode {
     User = 3,
 }
 
-pub struct VAXCPU<'bus, Bus: VAXBus> {
+pub struct VAXCPU<'bus, Bus: VAXBus + 'static> {
     regfile: VAXRegisterFile,
 
 
@@ -33,19 +33,25 @@ pub struct VAXCPU<'bus, Bus: VAXBus> {
 
     bus: Option<&'bus mut Bus>,
 
+    itable: Option<[Option<fn(&mut VAXCPU<'_, Bus> , &mut Cycles) -> Result<(), Error>>; 1280]>,
+
     cur_cycle: Cycles,
 }
 
 impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
     pub fn new() -> Self {
-        VAXCPU {
+        let mut cpu = VAXCPU {
             regfile: VAXRegisterFile::new(),
 
             halted: false,
             bus: None,
+            itable: None,
+
 
             cur_cycle: Cycles(0),
-        }
+        };
+        cpu.setup_instr_table();
+        cpu
     }
 
     pub fn halt(&mut self) {
@@ -54,6 +60,10 @@ impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
 
     pub fn halted(&self) -> bool {
         self.halted
+    }
+
+    pub fn cur_cycle(&self) -> usize {
+        self.cur_cycle.0
     }
 
     pub fn give_bus(&mut self, bus: &'bus mut Bus) {
@@ -75,8 +85,8 @@ impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
         if self.regfile.get_mapen() {
             todo!()
         } else {
-            let (cyc, res) = bus.read_val_tagged(addr as usize, ());
-            let out: T = res.unwrap().0; 
+            let (cyc, res) = bus.read_val(addr as usize);
+            let out: T = res.unwrap(); 
             self.cur_cycle += cyc;
             Ok(out)
         }
@@ -88,7 +98,7 @@ impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
         if self.regfile.get_mapen() {
             todo!()
         } else {
-            let (cyc, _) = bus.write_val_tagged(addr as usize, val, ());
+            let (cyc, _) = bus.write_val(addr as usize, val);
             self.cur_cycle += cyc;
             Ok(())
         }
@@ -117,5 +127,11 @@ impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
         psl.set_z(flags.get_z());
         psl.set_n(flags.get_n());
         self.regfile.set_psl(psl);
+    }
+}
+
+impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
+    pub fn prepare_as_microvax(&mut self) {
+        self.regfile.set_pc(0x2004_0000);
     }
 }

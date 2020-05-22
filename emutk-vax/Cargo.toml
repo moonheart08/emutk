@@ -13,10 +13,13 @@ num-derive = "^0.3"
 bytemuck = "^1.2"
 emutk-core = { path = "../emutk-core" }
 bit-vec = "0.6"
+tablegen-proc = { path = "../tablegen-proc" }
 
 [features]
-default = ["noncompliant_extensions"]
+default = ["noncompliant_extensions", "sys_debug"]
 
+
+sys_debug = []
 noncompliant_extensions = ["64bit", "128bit"]
 64bit = []
 128bit = []

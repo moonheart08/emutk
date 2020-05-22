@@ -1,486 +1,450 @@
+use tablegen_proc::gen_instr_table;
 use num_derive::*;
 use num_traits::{ToPrimitive, FromPrimitive};
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, FromPrimitive, ToPrimitive)]
-#[repr(u16)]
-pub enum InstructionType {
-    ADAWI = 0x58,
-
-    ADDB2 = 0x80,
-    ADDB3 = 0x81,
-    ADDW2 = 0xA0,
-    ADDW3 = 0xA1,
-    ADDL2 = 0xC0,
-    ADDL3 = 0xC1,
-    #[cfg(feature = "64bit")]
-    ADDQ2 = 0x80FD,
-    #[cfg(feature = "64bit")]
-    ADDQ3 = 0x81FD,
-    #[cfg(feature = "128bit")]
-    ADDO2 = 0xA0FD,
-    #[cfg(feature = "128bit")]
-    ADDO3 = 0xA1FD,
-
-    ADWC = 0xD8,
-
-    ASHL = 0x78,
-    ASHQ = 0x79,
-
-    BICB2 = 0x8A,
-    BICB3 = 0x8B,
-    BICW2 = 0xAA,
-    BICW3 = 0xAB,
-    BICL2 = 0xCA,
-    BICL3 = 0xCB,
-    #[cfg(feature = "64bit")]
-    BICQ2 = 0x8AFD,
-    #[cfg(feature = "64bit")]
-    BICQ3 = 0x8BFD,
-    #[cfg(feature = "128bit")]
-    BICO2 = 0xAAFD,
-    #[cfg(feature = "128bit")]
-    BICO3 = 0xABFD,
-
-    BISB2 = 0x88,
-    BISB3 = 0x89,
-    BISW2 = 0xA8,
-    BISW3 = 0xA9,
-    BISL2 = 0xC8,
-    BISL3 = 0xC9,
-    #[cfg(feature = "64bit")]
-    BISQ2 = 0x88FD,
-    #[cfg(feature = "64bit")]
-    BISQ3 = 0x89FD,
-    #[cfg(feature = "128bit")]
-    BISO2 = 0xA8FD,
-    #[cfg(feature = "128bit")]
-    BISO3 = 0xA9FD,
-
-    BITB = 0x93,
-    BITW = 0xB3,
-    BITL = 0xD3,
-    #[cfg(feature = "64bit")]
-    BITQ = 0x93FD,
-    #[cfg(feature = "128bit")]
-    BITO = 0xB3FD,
-
-    CLRB = 0x94,
-    CLRW = 0xB4,
-    CLRL = 0xD4,
-    CLRQ = 0x7C,
-    CLRO = 0x7CFD,
-
-    CMPB = 0x91,
-    CMPW = 0xB1,
-    CMPL = 0xD1,
-    #[cfg(feature = "64bit")]
-    CMPQ = 0x91FD,
-    #[cfg(feature = "128bit")]
-    CMPO = 0xB1FD,
-
-    CVTBW = 0x99,
-    CVTBL = 0x98,
-    CVTWB = 0x33,
-    CVTWL = 0x32,
-    CVTLB = 0xF6,
-    CVTLW = 0xF7,
-    //TODO: allocate Quad and Octa conversion instructions.
-
-    DECB = 0x97,
-    DECW = 0xB7,
-    DECL = 0xD7,
-    #[cfg(feature = "64bit")]
-    DECQ = 0x97FD,
-    #[cfg(feature = "128bit")]
-    DECO = 0xB7FD,
-
-    DIVB2 = 0x86,
-    DIVB3 = 0x87,
-    DIVW2 = 0xA6,
-    DIVW3 = 0xA7,
-    DIVL2 = 0xC6,
-    DIVL3 = 0xC7,
-    #[cfg(feature = "64bit")]
-    DIVQ2 = 0x86FD,
-    #[cfg(feature = "64bit")]
-    DIVQ3 = 0x87FD,
-    #[cfg(feature = "128bit")]
-    DIVO2 = 0xA6FD,
-    #[cfg(feature = "128bit")]
-    DIVO3 = 0xA7FD,
-
-
-    EDIV = 0x7B,
-    EMUL = 0x7A,
-
-    INCB = 0x96,
-    INCW = 0xB6,
-    INCL = 0xD6,
-    #[cfg(feature = "64bit")]
-    INCQ = 0x96FD,
-    #[cfg(feature = "128bit")]
-    INCO = 0xB6FD,
-
-
-    MCOMB = 0x92,
-    MCOMW = 0xB2,
-    MCOML = 0xD2,
-    #[cfg(feature = "64bit")]
-    MCOMQ = 0x92FD,
-    #[cfg(feature = "128bit")]
-    MCOMO = 0xB2FD,
-
-    MNEGB = 0x8E,
-    MNEGW = 0xAE,
-    MNEGL = 0xCE,
-    #[cfg(feature = "64bit")]
-    MNEGQ = 0x8EFD,
-    #[cfg(feature = "128bit")]
-    MNEGO = 0xAEFD,
-
-    MOVB = 0x90,
-    MOVW = 0xB0,
-    MOVL = 0xD0,
-    MOVQ = 0x7D,
-    MOVO = 0x7DFD,
-
-    MOVZBW = 0x9B,
-    MOVZBL = 0x9A,
-    MOVZWL = 0x3C,
-    //TODO: allocate Qud and Octa zero extend instructions.
-
-    MULB2 = 0x84,
-    MULB3 = 0x85,
-    MULW2 = 0xA4,
-    MULW3 = 0xA5,
-    MULL2 = 0xC4,
-    MULL3 = 0xC5,
-    #[cfg(feature = "64bit")]
-    MULQ2 = 0x84FD,
-    #[cfg(feature = "64bit")]
-    MULQ3 = 0x85FD,
-    #[cfg(feature = "128bit")]
-    MULO2 = 0xA4FD,
-    #[cfg(feature = "128bit")]
-    MULO3 = 0xA5FD,
-
-    PUSHL = 0xDD,
-    #[cfg(feature = "64bit")]
-    PUSHQ = 0xDDFD,
-
-    ROTL = 0x9C,
-    #[cfg(feature = "64bit")]
-    ROTQ = 0x9CFD,
-    
-    SBWC = 0xD9,
-
-    SUBB2 = 0x82,
-    SUBB3 = 0x83,
-    SUBW2 = 0xA2,
-    SUBW3 = 0xA3,
-    SUBL2 = 0xC2,
-    SUBL3 = 0xC3,
-    #[cfg(feature = "64bit")]
-    SUBQ2 = 0x82FD,
-    #[cfg(feature = "64bit")]
-    SUBQ3 = 0x83FD,
-    #[cfg(feature = "128bit")]
-    SUBO2 = 0xA2FD,
-    #[cfg(feature = "128bit")]
-    SUBO3 = 0xA3FD,
-
-    TSTB = 0x95,
-    TSTW = 0xB5,
-    TSTL = 0xD5,
-    #[cfg(feature = "64bit")]
-    TSTQ = 0x95FD,
-    #[cfg(feature = "128bit")]
-    TSTO = 0xB5FD,
-    
-    XORB2 = 0x8C,
-    XORB3 = 0x8D,
-    XORW2 = 0xAC,
-    XORW3 = 0xAD,
-    XORL2 = 0xCC,
-    XORL3 = 0xCD,
-    #[cfg(feature = "64bit")]
-    XORQ2 = 0x8CFD,
-    #[cfg(feature = "64bit")]
-    XORQ3 = 0x8DFD,
-    #[cfg(feature = "128bit")]
-    XORO2 = 0xACFD,
-    #[cfg(feature = "128bit")]
-    XORO3 = 0xADFD,
-
-    MOVAB = 0x9E,
-    MOVAW = 0x3E,
-    MOVAL = 0xDE,
-    MOVAQ = 0x7E,
-    MOVAO = 0x7EFD,
-
-    PUSHAB = 0x9F,
-    PUSHAW = 0x3F,
-    PUSHAL = 0xDF,
-    PUSHAQ = 0x7F,
-    PUSHAO = 0x7FFD,
-
-    CMPV = 0xEC,
-    CMPZV = 0xED,
-
-    EXTV = 0xEE,
-    EXTZV = 0xEF,
-
-    FFC = 0xEB,
-    FFS = 0xEA,
-
-    INSV = 0xF0,
-
-    ACBB = 0x9D,
-    ACBW = 0x3D,
-    ACBL = 0xF1,
-    ACBF = 0x4F,
-    ACBD = 0x6F, // Unsupported instruction, D_floating
-    ACBG = 0x4FFD,
-    ACBH = 0x6FFD, // Unsupported instruction, H_floating
-
-    AOBLEQ = 0xF3,
-
-    AOBLSS = 0xF2,
-
-    BGTR = 0x14,
-    BLEQ = 0x15,
-    BNEQ = 0x12,
-    BEQL = 0x13,
-    BGEQ = 0x18,
-    BLSS = 0x19,
-    BGTRU = 0x1A,
-    BLEQU = 0x1B,
-    BVC = 0x1C,
-    BVS = 0x1D,
-    BGEQU = 0x1E,
-    BLSSU = 0x1F,
-
-    BBS = 0xE0,
-    BBC = 0xE1,
-
-    BBSS = 0xE2,
-    BBCS = 0xE3,
-    BBSC = 0xE4,
-    BBCC = 0xE5,
-
-    BBSSI = 0xE6,
-    BBCCI = 0xE7,
-
-    BLBS = 0xE8,
-    BLBC = 0xE9,
-
-    BRB = 0x11,
-    BRW = 0x31,
-
-    BSBB = 0x10,
-    BSBW = 0x30,
-
-    CASEB = 0x8F,
-    CASEW = 0xAF,
-    CASEL = 0xCF,
-
-    JMP = 0x17,
-
-    JSB = 0x16,
-
-    RSB = 0x05,
-
-    SOBGEQ = 0xF4,
-
-    SOBGTR = 0xF5,
-
-    CALLG = 0xFA,
-    CALLS = 0xFB,
-    RET = 0x04,
-
-    BICPSW = 0xB9,
-    BISPSW = 0xB8,
-
-    BPT = 0x03,
-    BUGW = 0xFEFF,
-    BUGL = 0xFDFF,
-
-    HALT = 0x00,
-
-    INDEX = 0x0A,
-
-    MOVPSL = 0xDC,
-
-    NOP = 0x01,
-
-    POPR = 0xBA,
-    PUSHR = 0xBB,
-
-    // Queue instructions
-
-    INSQHI = 0x5C,
-    INSQTI = 0x5D,
-    INSQUE = 0x0E, // Why are the queue instructions in the major 252 instructions? 
-    REMQHI = 0x5E, // They'd be better put in one of the 3 extension prefixes...
-    REMQTI = 0x5F,
-    REMQUE = 0x0F,
-
-    // Floating point
-
-    ADDF2 = 0x40,
-    ADDF3 = 0x41,
-    ADDD2 = 0x60, // Unsupported
-    ADDD3 = 0x61, // Unsupported
-    ADDG2 = 0x40FD,
-    ADDG3 = 0x41FD,
-    ADDH2 = 0x60FD, // Unsupported
-    ADDH3 = 0x61FD, // Unsupported
-
-    CMPF = 0x51,
-    CMPD = 0x71, // Unsupported
-    CMPG = 0x51FD,
-    CMPH = 0x71FD, // Unsupported
-
-    // Floating point convert instructions.
-
-    CVTBF = 0x4C,
-    CVTWF = 0x4D,
-    CVTLF = 0x4E,
-
-    CVTBD = 0x6C, // Unsupported
-    CVTWD = 0x6D, // Unsupported
-    CVTLD = 0x6E, // Unsupported
-
-    CVTBG = 0x4CFD,
-    CVTWG = 0x4DFD,
-    CVTLG = 0x4EFD,
-
-    CVTBH = 0x6CFD, // Unsupported
-    CVTWH = 0x6DFD, // Unsupported
-    CVTLH = 0x6EFD, // Unsupported
-
-    CVTFB = 0x48,
-    CVTFW = 0x49,
-    CVTFL = 0x4A,
-    CVTRFL = 0x4B,
-
-    CVTDB = 0x68, // Unsupported
-    CVTDW = 0x69, // Unsupported
-    CVTDL = 0x6A, // Unsupported
-    CVTRDL = 0x6B, // Unsupported
-
-    CVTGB = 0x48FD,
-    CVTGW = 0x49FD,
-    CVTGL = 0x4AFD,
-    CVTRGL = 0x4BFD,
-
-    CVTHB = 0x68FD, // Unsupported
-    CVTHW = 0x69FD, // Unsupported
-    CVTHL = 0x6AFD, // Unsupported
-    CVTRHL = 0x6BFD, // Unsupported
-
-    CVTFD = 0x56, // Unsupported
-    CVTFG = 0x99FD,
-    CVTFH = 0x98FD, // Unsupported
-
-    CVTDF = 0x76, // Unsupported
-    CVTDH = 0x32FD, // Unsupported
-
-    CVTGF = 0x33FD,
-    CVTGH = 0x56FD, // Unsupported
-
-    CVTHF = 0xF6FD, // Unsupported
-    CVTHD = 0xF7FD, // Unsupported
-    CVTHG = 0x76FD, // Unsupported
-
-    // Rest of floating point.
-
-    DIVF2 = 0x46,
-    DIVF3 = 0x47,
-    DIVD2 = 0x66, // Unsupported
-    DIVD3 = 0x67, // Unsupported
-    DIVG2 = 0x46FD,
-    DIVG3 = 0x47FD,
-    DIVH2 = 0x66FD, // Unsupported
-    DIVH3 = 0x67FD, // Unsupported
-
-    EMODF = 0x54,
-    EMODD = 0x74, // Unsupported
-    EMODG = 0x54FD,
-    EMODH = 0x74FD, // Unsupported
-
-    MNEGF = 0x52,
-    MNEGD = 0x72, // Unsupported
-    MNEGG = 0x52FD,
-    MNEGH = 0x72FD, // Unsupported
-
-    MOVF = 0x50,
-    MOVD = 0x70, // Unsupported
-    MOVG = 0x50FD,
-    MOVH = 0x70FD, // Unsupported
-
-    MULF2 = 0x44,
-    MULF3 = 0x45,
-    MULD2 = 0x64, // Unsupported
-    MULD3 = 0x65, // Unsupported
-    MULG2 = 0x44FD,
-    MULG3 = 0x45FD,
-    MULH2 = 0x64FD, // Unsupported
-    MULH3 = 0x65FD, // Unsupported
-
-    POLYF = 0x55, // All POLY instructions are unimplemented for now. Not top priority.
-    POLYD = 0x75, // Unsupported
-    POLYG = 0x55FD,
-    POLYH = 0x75FD, // Unsupported
-
-    SUBF2 = 0x42,
-    SUBF3 = 0x43,
-    SUBD2 = 0x62, // Unsupported
-    SUBD3 = 0x63, // Unsupported
-    SUBG2 = 0x42FD,
-    SUBG3 = 0x43FD,
-    SUBH2 = 0x62FD, // Unsupported
-    SUBH3 = 0x63FD, // Unsupported
-
-    TSTF = 0x53,
-    TSTD = 0x73,
-    TSTG = 0x53FD,
-    TSTH = 0x73FD,
-    
-    // Instructions for exceptions and interrupts.
-    
-    REI = 0x02,
-
-    CHMK = 0xBC,
-    CHME = 0xBD,
-    CHMS = 0xBE,
-    CHMU = 0xBF,
-
-    // Instructions for processes.
-
-    LDPCTX = 0x06,
-    SVPCTX = 0x07,
-
-    //
-
-    MTPR = 0xDA,
-    MFPR = 0xDB,
+macro_rules! build_itables {
+    (pub enum $name:ident {
+        $($iname:ident = $val:expr, $tval:expr),+,
+    }) => {
+        #[derive(Copy, Clone, Debug, PartialEq, Eq, FromPrimitive, ToPrimitive)]
+        #[repr(u16)]
+        pub enum $name {
+            $(
+                $iname = $val,
+            )+
+        }
+
+        impl $name {
+            pub fn from_str(name: &'_ str) -> Option<Self> {
+                match name {
+                    $(
+                        stringify!($iname) => Some(Self::$iname),
+                    )+
+                    _ => None
+                }
+            }
+
+            pub fn to_str(self) -> &'static str {
+                match self {
+                    $(
+                        Self::$iname => stringify!($iname),
+                    )+
+                }
+            }
+
+            pub fn instr_list() -> Vec<Self> {
+                vec![
+                    $(
+                        $name::$iname,
+                    )+
+                ]
+            }
+        }
+        use $name::*;
+        const VAX_INSTR_MAP_TABLE: [Option<$name>; 1280] = gen_instr_table!{
+            VAX_INSTR_MAP_TABLE; 1280; Option<$name>; None => {
+                $(
+                    $tval => $iname, Some($iname);
+                )+
+            }
+        };
+    }
 }
+/*
+
+*/
+// NOTE: automatically converting opcodes with prefixes to a table index
+// isn't currently possible. This will have to wait on constexprs in 
+// proc macros.
+build_itables!(
+pub enum InstructionType {
+    ADAWI = 0x58, 0x58,
+    ADDB2 = 0x80, 0x80,
+    ADDB3 = 0x81, 0x81,
+    ADDW2 = 0xA0, 0xA0,
+    ADDW3 = 0xA1, 0xA1,
+    ADDL2 = 0xC0, 0xC0,
+    ADDL3 = 0xC1, 0xC1,
+    ADWC = 0xD8, 0xD8,
+    ASHL = 0x78, 0x78,
+    ASHQ = 0x79, 0x79,
+    BICB2 = 0x8A, 0x8A,
+    BICB3 = 0x8B, 0x8B,
+    BICW2 = 0xAA, 0xAA,
+    BICW3 = 0xAB, 0xAB,
+    BICL2 = 0xCA, 0xCA,
+    BICL3 = 0xCB, 0xCB,
+    BISB2 = 0x88, 0x88,
+    BISB3 = 0x89, 0x89,
+    BISW2 = 0xA8, 0xA8,
+    BISW3 = 0xA9, 0xA9,
+    BISL2 = 0xC8, 0xC8,
+    BISL3 = 0xC9, 0xC9,
+    BITB = 0x93, 0x93,
+    BITW = 0xB3, 0xB3,
+    BITL = 0xD3, 0xD3,
+    CLRB = 0x94, 0x94,
+    CLRW = 0xB4, 0xB4,
+    CLRL = 0xD4, 0xD4,
+    CLRQ = 0x7C, 0x7C,
+    CLRO = 0x7CFD, 0x27C,
+    CMPB = 0x91, 0x91,
+    CMPW = 0xB1, 0xB1,
+    CMPL = 0xD1, 0xD1,
+    CVTBW = 0x99, 0x99,
+    CVTBL = 0x98, 0x98,
+    CVTWB = 0x33, 0x33,
+    CVTWL = 0x32, 0x32,
+    CVTLB = 0xF6, 0xF6,
+    CVTLW = 0xF7, 0xF7,
+    DECB = 0x97, 0x97,
+    DECW = 0xB7, 0xB7,
+    DECL = 0xD7, 0xD7,
+    DIVB2 = 0x86, 0x86,
+    DIVB3 = 0x87, 0x87,
+    DIVW2 = 0xA6, 0xA6,
+    DIVW3 = 0xA7, 0xA7,
+    DIVL2 = 0xC6, 0xC6,
+    DIVL3 = 0xC7, 0xC7,
+    EDIV = 0x7B, 0x7B,
+    EMUL = 0x7A, 0x7A,
+    INCB = 0x96, 0x96,
+    INCW = 0xB6, 0xB6,
+    INCL = 0xD6, 0xD6,
+    MCOMB = 0x92, 0x92,
+    MCOMW = 0xB2, 0xB2,
+    MCOML = 0xD2, 0xD2,
+    MNEGB = 0x8E, 0x8E,
+    MNEGW = 0xAE, 0xAE,
+    MNEGL = 0xCE, 0xCE,
+    MOVB = 0x90, 0x90,
+    MOVW = 0xB0, 0xB0,
+    MOVL = 0xD0, 0xD0,
+    MOVQ = 0x7D, 0x7D,
+    MOVO = 0x7DFD, 0x27D,
+    MOVZBW = 0x9B, 0x9B,
+    MOVZBL = 0x9A, 0x9A,
+    MOVZWL = 0x3C, 0x3C,
+    MULB2 = 0x84, 0x84,
+    MULB3 = 0x85, 0x85,
+    MULW2 = 0xA4, 0xA4,
+    MULW3 = 0xA5, 0xA5,
+    MULL2 = 0xC4, 0xC4,
+    MULL3 = 0xC5, 0xC5,
+    PUSHL = 0xDD, 0xDD,
+    ROTL = 0x9C, 0x9C,
+    SBWC = 0xD9, 0xD9,
+    SUBB2 = 0x82, 0x82,
+    SUBB3 = 0x83, 0x83,
+    SUBW2 = 0xA2, 0xA2,
+    SUBW3 = 0xA3, 0xA3,
+    SUBL2 = 0xC2, 0xC2,
+    SUBL3 = 0xC3, 0xC3,
+    TSTB = 0x95, 0x95,
+    TSTW = 0xB5, 0xB5,
+    TSTL = 0xD5, 0xD5,
+    XORB2 = 0x8C, 0x8C,
+    XORB3 = 0x8D, 0x8D,
+    XORW2 = 0xAC, 0xAC,
+    XORW3 = 0xAD, 0xAD,
+    XORL2 = 0xCC, 0xCC,
+    XORL3 = 0xCD, 0xCD,
+    MOVAB = 0x9E, 0x9E,
+    MOVAW = 0x3E, 0x3E,
+    MOVAL = 0xDE, 0xDE,
+    MOVAQ = 0x7E, 0x7E,
+    MOVAO = 0x7EFD, 0x27E,
+    PUSHAB = 0x9F, 0x9F,
+    PUSHAW = 0x3F, 0x3F,
+    PUSHAL = 0xDF, 0xDF,
+    PUSHAQ = 0x7F, 0x7F,
+    PUSHAO = 0x7FFD, 0x27F,
+    CMPV = 0xEC, 0xEC,
+    CMPZV = 0xED, 0xED,
+    EXTV = 0xEE, 0xEE,
+    EXTZV = 0xEF, 0xEF,
+    FFC = 0xEB, 0xEB,
+    FFS = 0xEA, 0xEA,
+    INSV = 0xF0, 0xF0,
+    ACBB = 0x9D, 0x9D,
+    ACBW = 0x3D, 0x3D,
+    ACBL = 0xF1, 0xF1,
+    ACBF = 0x4F, 0x4F,
+    ACBD = 0x6F, 0x6F,
+    ACBG = 0x4FFD, 0x24F,
+    ACBH = 0x6FFD, 0x26F,
+    AOBLEQ = 0xF3, 0xF3,
+    AOBLSS = 0xF2, 0xF2,
+    BGTR = 0x14, 0x14,
+    BLEQ = 0x15, 0x15,
+    BNEQ = 0x12, 0x12,
+    BEQL = 0x13, 0x13,
+    BGEQ = 0x18, 0x18,
+    BLSS = 0x19, 0x19,
+    BGTRU = 0x1A, 0x1A,
+    BLEQU = 0x1B, 0x1B,
+    BVC = 0x1C, 0x1C,
+    BVS = 0x1D, 0x1D,
+    BGEQU = 0x1E, 0x1E,
+    BLSSU = 0x1F, 0x1F,
+    BBS = 0xE0, 0xE0,
+    BBC = 0xE1, 0xE1,
+    BBSS = 0xE2, 0xE2,
+    BBCS = 0xE3, 0xE3,
+    BBSC = 0xE4, 0xE4,
+    BBCC = 0xE5, 0xE5,
+    BBSSI = 0xE6, 0xE6,
+    BBCCI = 0xE7, 0xE7,
+    BLBS = 0xE8, 0xE8,
+    BLBC = 0xE9, 0xE9,
+    BRB = 0x11, 0x11,
+    BRW = 0x31, 0x31,
+    BSBB = 0x10, 0x10,
+    BSBW = 0x30, 0x30,
+    CASEB = 0x8F, 0x8F,
+    CASEW = 0xAF, 0xAF,
+    CASEL = 0xCF, 0xCF,
+    JMP = 0x17, 0x17,
+    JSB = 0x16, 0x16,
+    RSB = 0x05, 0x05,
+    SOBGEQ = 0xF4, 0xF4,
+    SOBGTR = 0xF5, 0xF5,
+    CALLG = 0xFA, 0xFA,
+    CALLS = 0xFB, 0xFB,
+    RET = 0x04, 0x04,
+    BICPSW = 0xB9, 0xB9,
+    BISPSW = 0xB8, 0xB8,
+    BPT = 0x03, 0x03,
+    BUGW = 0xFEFF, 0x4FE,
+    BUGL = 0xFDFF, 0x4FD,
+    HALT = 0x00, 0x00,
+    INDEX = 0x0A, 0x0A,
+    MOVPSL = 0xDC, 0xDC,
+    NOP = 0x01, 0x01,
+    POPR = 0xBA, 0xBA,
+    PUSHR = 0xBB, 0xBB,
+    INSQHI = 0x5C, 0x5C,
+    INSQTI = 0x5D, 0x5D,
+    INSQUE = 0x0E, 0x0E,
+    REMQHI = 0x5E, 0x5E,
+    REMQTI = 0x5F, 0x5F,
+    REMQUE = 0x0F, 0x0F,
+    ADDF2 = 0x40, 0x40,
+    ADDF3 = 0x41, 0x41,
+    ADDD2 = 0x60, 0x60,
+    ADDD3 = 0x61, 0x61,
+    ADDG2 = 0x40FD, 0x240,
+    ADDG3 = 0x41FD, 0x241,
+    ADDH2 = 0x60FD, 0x260,
+    ADDH3 = 0x61FD, 0x261,
+    CMPF = 0x51, 0x51,
+    CMPD = 0x71, 0x71,
+    CMPG = 0x51FD, 0x251,
+    CMPH = 0x71FD, 0x271,
+    CVTBF = 0x4C, 0x4C,
+    CVTWF = 0x4D, 0x4D,
+    CVTLF = 0x4E, 0x4E,
+    CVTBD = 0x6C, 0x6C,
+    CVTWD = 0x6D, 0x6D,
+    CVTLD = 0x6E, 0x6E,
+    CVTBG = 0x4CFD, 0x24C,
+    CVTWG = 0x4DFD, 0x24D,
+    CVTLG = 0x4EFD, 0x24E,
+    CVTBH = 0x6CFD, 0x26C,
+    CVTWH = 0x6DFD, 0x26D,
+    CVTLH = 0x6EFD, 0x26E,
+    CVTFB = 0x48, 0x48,
+    CVTFW = 0x49, 0x49,
+    CVTFL = 0x4A, 0x4A,
+    CVTRFL = 0x4B, 0x4B,
+    CVTDB = 0x68, 0x68,
+    CVTDW = 0x69, 0x69,
+    CVTDL = 0x6A, 0x6A,
+    CVTRDL = 0x6B, 0x6B,
+    CVTGB = 0x48FD, 0x248,
+    CVTGW = 0x49FD, 0x249,
+    CVTGL = 0x4AFD, 0x24A,
+    CVTRGL = 0x4BFD, 0x24B,
+    CVTHB = 0x68FD, 0x268,
+    CVTHW = 0x69FD, 0x269,
+    CVTHL = 0x6AFD, 0x26A,
+    CVTRHL = 0x6BFD, 0x26B,
+    CVTFD = 0x56, 0x56,
+    CVTFG = 0x99FD, 0x299,
+    CVTFH = 0x98FD, 0x298,
+    CVTDF = 0x76, 0x76,
+    CVTDH = 0x32FD, 0x232,
+    CVTGF = 0x33FD, 0x233,
+    CVTGH = 0x56FD, 0x256,
+    CVTHF = 0xF6FD, 0x2F6,
+    CVTHD = 0xF7FD, 0x2F7,
+    CVTHG = 0x76FD, 0x276,
+    DIVF2 = 0x46, 0x46,
+    DIVF3 = 0x47, 0x47,
+    DIVD2 = 0x66, 0x66,
+    DIVD3 = 0x67, 0x67,
+    DIVG2 = 0x46FD, 0x246,
+    DIVG3 = 0x47FD, 0x247,
+    DIVH2 = 0x66FD, 0x266,
+    DIVH3 = 0x67FD, 0x267,
+    EMODF = 0x54, 0x54,
+    EMODD = 0x74, 0x74,
+    EMODG = 0x54FD, 0x254,
+    EMODH = 0x74FD, 0x274,
+    MNEGF = 0x52, 0x52,
+    MNEGD = 0x72, 0x72,
+    MNEGG = 0x52FD, 0x252,
+    MNEGH = 0x72FD, 0x272,
+    MOVF = 0x50, 0x50,
+    MOVD = 0x70, 0x70,
+    MOVG = 0x50FD, 0x250,
+    MOVH = 0x70FD, 0x270,
+    MULF2 = 0x44, 0x44,
+    MULF3 = 0x45, 0x45,
+    MULD2 = 0x64, 0x64,
+    MULD3 = 0x65, 0x65,
+    MULG2 = 0x44FD, 0x244,
+    MULG3 = 0x45FD, 0x245,
+    MULH2 = 0x64FD, 0x264,
+    MULH3 = 0x65FD, 0x265,
+    POLYF = 0x55, 0x55,
+    POLYD = 0x75, 0x75,
+    POLYG = 0x55FD, 0x255,
+    POLYH = 0x75FD, 0x275,
+    SUBF2 = 0x42, 0x42,
+    SUBF3 = 0x43, 0x43,
+    SUBD2 = 0x62, 0x62,
+    SUBD3 = 0x63, 0x63,
+    SUBG2 = 0x42FD, 0x242,
+    SUBG3 = 0x43FD, 0x243,
+    SUBH2 = 0x62FD, 0x262,
+    SUBH3 = 0x63FD, 0x263,
+    TSTF = 0x53, 0x53,
+    TSTD = 0x73, 0x73,
+    TSTG = 0x53FD, 0x253,
+    TSTH = 0x73FD, 0x273,
+    CMPC3 = 0x29, 0x29,
+    CMPC5 = 0x2D, 0x2D,
+    LOCC = 0x3A, 0x3A,
+    MATCHC = 0x39, 0x39,
+    MOVC3 = 0x28, 0x28,
+    MOVC5 = 0x2C, 0x2C,
+    MOVTC = 0x2E, 0x2E,
+    MOVTUC = 0x2F, 0x2F,
+    SCANC = 0x2A, 0x2A,
+    SKPC = 0x3B, 0x3B,
+    SPANC = 0x2B, 0x2B,
+    CRC = 0x0B, 0x0B,
+    ADDP4 = 0x20, 0x20,
+    ADDP6 = 0x21, 0x21,
+    ASHP = 0xF8, 0xF8,
+    CMPP3 = 0x35, 0x35,
+    CMPP4 = 0x37, 0x37,
+    CVTLP = 0xF9, 0xF9,
+    CVTPL = 0x36, 0x36,
+    CVTPS = 0x08, 0x08,
+    CVTPT = 0x24, 0x24,
+    CVTSP = 0x09, 0x09,
+    CVTTP = 0x26, 0x26,
+    DIVP = 0x27, 0x27,
+    MOVP = 0x34, 0x34,
+    MULP = 0x25, 0x25,
+    SUBP4 = 0x22, 0x22,
+    SUBP6 = 0x23, 0x23,
+    EDITPC = 0x38, 0x38,
+    PROBER = 0x0C, 0x0C,
+    PROBEW = 0x0D, 0x0D,
+    REI = 0x02, 0x02,
+    CHMK = 0xBC, 0xBC,
+    CHME = 0xBD, 0xBD,
+    CHMS = 0xBE, 0xBE,
+    CHMU = 0xBF, 0xBF,
+    LDPCTX = 0x06, 0x06,
+    SVPCTX = 0x07, 0x07,
+    MTPR = 0xDA, 0xDA,
+    MFPR = 0xDB, 0xDB,
+    WAIT = 0x02FD, 0x202,
+    PROBEVMR = 0x9AFD, 0x29A,
+    PROBEVMW = 0x9BFD, 0x29B,
+    VGATHL = 0x35FD, 0x235,
+    VGATHQ = 0x37FD, 0x237,
+    VSTL = 0x9CFD, 0x29C,
+    VSTQ = 0x9EFD, 0x29E,
+    VSCATL = 0x9DFD, 0x29D,
+    VSCATQ = 0x9FFD, 0x29F,
+    VVADDL = 0x80FD, 0x280,
+    VSADDL = 0x81FD, 0x281,
+    VVCMPL = 0xC0FD, 0x2C0,
+    VSCMPL = 0xC1FD, 0x2C1,
+    VVMULL = 0xA0FD, 0x2A0,
+    VSMULL = 0xA1FD, 0x2A1,
+    VVSUBL = 0x88FD, 0x288,
+    VSSUBL = 0x89FD, 0x289,
+    VVBISL = 0xC8FD, 0x2C8,
+    VVXORL = 0xE8FD, 0x2E8,
+    VVBICL = 0xCCFD, 0x2CC,
+    VSBISL = 0xC9FD, 0x2C9,
+    VSXORL = 0xE9FD, 0x2E9,
+    VSBICL = 0xCDFD, 0x2CD,
+    VVSRLL = 0xE0FD, 0x2E0,
+    VVSLLL = 0xE4FD, 0x2E4,
+    VSSRLL = 0xE1FD, 0x2E1,
+    VSSLLL = 0xE5FD, 0x2E5,
+    VVADDF = 0x84FD, 0x284,
+    VSADDF = 0x85FD, 0x285,
+    VVADDD = 0x86FD, 0x286,
+    VSADDD = 0x87FD, 0x287,
+    VVADDG = 0x82FD, 0x282,
+    VSADDG = 0x83FD, 0x283,
+    VVCMPF = 0xC4FD, 0x2C4,
+    VSCMPF = 0xC5FD, 0x2C5,
+    VVCMPD = 0xC6FD, 0x2C6,
+    VSCMPD = 0xC7FD, 0x2C7,
+    VVCMPG = 0xC2FD, 0x2C2,
+    VSCMPG = 0xC3FD, 0x2C3,
+    VVCVT = 0xECFD, 0x2EC,
+    VVDIVF = 0xACFD, 0x2AC,
+    VSDIVF = 0xADFD, 0x2AD,
+    VVDIVD = 0xAEFD, 0x2AE,
+    VSDIVD = 0xAFFD, 0x2AF,
+    VVDIVG = 0xAAFD, 0x2AA,
+    VSDIVG = 0xABFD, 0x2AB,
+    VVMULF = 0xA4FD, 0x2A4,
+    VSMULF = 0xA5FD, 0x2A5,
+    VVMULD = 0xA6FD, 0x2A6,
+    VSMULD = 0xA7FD, 0x2A7,
+    VVMULG = 0xA2FD, 0x2A2,
+    VSMULG = 0xA3FD, 0x2A3,
+    VVSUBF = 0x8CFD, 0x28C,
+    VSSUBF = 0x8DFD, 0x28D,
+    VVSUBD = 0x8EFD, 0x28E,
+    VSSUBD = 0x8FFD, 0x28F,
+    VVSUBG = 0x8AFD, 0x28A,
+    VSSUBG = 0x8BFD, 0x28B,
+    VVMERGE = 0xEEFD, 0x2EE,
+    VSMERGE = 0xEFFD, 0x2EF,
+    IOTA = 0xEDFD, 0x2ED,
+    MFVP = 0x31FD, 0x231,
+    MTVP = 0xA9FD, 0x2A9,
+    VSYNC = 0xA8FD, 0x2A8,
+}
+);
+
+
 
 impl InstructionType {
-    pub fn from_instrid(bytes: [u8; 2]) -> Option<Self> 
-    {
-        match bytes[0] {
-            0xFD | 0xFE | 0xFF => {
-                InstructionType::from_u16(u16::from_le_bytes(bytes))
-            }
-            v => InstructionType::from_u8(v),
+    pub fn from_instrid(instr_bytes: [u8; 2]) -> Option<Self> {
+        if instr_bytes[0] < 0xFC {
+            VAX_INSTR_MAP_TABLE[instr_bytes[0] as usize]
+        } else {
+            let idx_adj = (instr_bytes[0] & 0x03) as usize * 256 + 256;
+            VAX_INSTR_MAP_TABLE[instr_bytes[1] as usize + idx_adj]
         }
     }
 
     pub fn opcode_len(self) -> usize {
         let dat = self.to_u16().unwrap();
-        if  dat > 0xFF {
+        if dat > 0xFF {
             2
         } else {
             1

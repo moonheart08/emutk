@@ -1,5 +1,5 @@
 #![feature(test)]
-
+#![feature(proc_macro_hygiene)]
 extern crate test;
 
 pub mod cpu;
@@ -9,7 +9,8 @@ mod error;
 pub use error::*;
 mod arith;
 pub use arith::*;
-
+mod float;
+pub use float::*;
 
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
