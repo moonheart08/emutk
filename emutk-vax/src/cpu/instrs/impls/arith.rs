@@ -186,3 +186,153 @@ pub fn instr_cmp
         Ok(())
     })
 }
+
+pub fn instr_bic3
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rrw_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let out = x & !y;
+        let mut flags = out.calc_nz();
+        flags.set_c(cpu.regfile.get_psl().get_c());
+        cpu.commit_flags(flags);
+        Ok(out)
+    })
+}
+
+pub fn instr_bic2
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rm_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let out = x & !y;
+        let mut flags = out.calc_nz();
+        flags.set_c(cpu.regfile.get_psl().get_c());
+        cpu.commit_flags(flags);
+        Ok(out)
+    })
+}
+
+pub fn instr_bis3
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rrw_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let out = x | y;
+        let mut flags = out.calc_nz();
+        flags.set_c(cpu.regfile.get_psl().get_c());
+        cpu.commit_flags(flags);
+        Ok(out)
+    })
+}
+
+pub fn instr_bis2
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rm_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let out = x | y;
+        let mut flags = out.calc_nz();
+        flags.set_c(cpu.regfile.get_psl().get_c());
+        cpu.commit_flags(flags);
+        Ok(out)
+    })
+}
+
+pub fn instr_bit
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rm_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let out = x & y;
+        let mut flags = out.calc_nz();
+        flags.set_c(cpu.regfile.get_psl().get_c());
+        cpu.commit_flags(flags);
+        Ok(out)
+    })
+}
+
+pub fn instr_emul
+    <B: VAXBus>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rrrw_instr_wrap(cpu, |x: u32, y: u32, z: u32, cpu: &mut VAXCPU<B>| -> Result<u64, Error> {
+        let x = x as i32 as i64;
+        let y = x as i32 as i64;
+        let z = x as i32 as i64;
+        let out = (x * y).wrapping_add(z) as u64;
+        let mut flags = out.calc_nz();
+        cpu.commit_flags(flags);
+        Ok(out)
+    })
+}
+
+pub fn instr_tst
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rm_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let v = x.flagged_sub(T::primitive_from(0_u32));
+        cpu.commit_flags(v.0);
+        Ok(v.1)
+    })
+}
+
+pub fn instr_xor3
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rrw_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let out = x ^ y;
+        let mut flags = out.calc_nz();
+        flags.set_c(cpu.regfile.get_psl().get_c());
+        cpu.commit_flags(flags);
+        Ok(out)
+    })
+}
+
+pub fn instr_xor2
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rm_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let out = x ^ y;
+        let mut flags = out.calc_nz();
+        flags.set_c(cpu.regfile.get_psl().get_c());
+        cpu.commit_flags(flags);
+        Ok(out)
+    })
+}
+
+pub fn instr_div3
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rrw_instr_wrap::<B, T, T, T, _>(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let v = x.flagged_div(y);
+        cpu.commit_flags(v.0);
+        Ok(v.1)
+    })
+}
+
+pub fn instr_div2
+    <B: VAXBus, T: VAXNum>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rm_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+        let v = x.flagged_div(y);
+        cpu.commit_flags(v.0);
+        Ok(v.1)
+    })
+}

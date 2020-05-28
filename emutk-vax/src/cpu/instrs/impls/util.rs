@@ -4,7 +4,6 @@ use crate::bus::VAXBus;
 use crate::Error;
 use crate::VAXNum;
 
-
 pub fn parse_read_operand
     <B: VAXBus, T: VAXNum>
     (cpu: &mut VAXCPU<B>)
@@ -47,6 +46,25 @@ pub fn rrw_instr_wrap
     Ok(())
 }
 
+pub fn rrrw_instr_wrap
+    <T: VAXBus, X: VAXNum, Y: VAXNum, Z: VAXNum, O: VAXNum, F>
+    (
+        cpu: &mut VAXCPU<T>,
+        func: F
+    )
+    -> Result<(), Error>
+    where F: Fn(X, Y, Z, &mut VAXCPU<T>) -> Result<O, Error>
+{
+    let opr_x = parse_read_operand::<T,X>(cpu)?.read(cpu)?;
+    let opr_y = parse_read_operand::<T,Y>(cpu)?.read(cpu)?;
+    let opr_z = parse_read_operand::<T,Z>(cpu)?.read(cpu)?;
+    let opw_o = parse_write_operand::<T,O>(cpu)?;
+
+    let v = func(opr_x, opr_y, opr_z, cpu)?;
+    opw_o.write(cpu, v)?;
+    Ok(())
+}
+
 pub fn rm_instr_wrap
     <B: VAXBus, V: VAXNum, O: VAXNum, F>
     (
@@ -78,6 +96,22 @@ pub fn rr_instr_wrap
 
     func(opr_a, opm_o, cpu)
 }
+
+
+pub fn r_instr_wrap
+    <B: VAXBus, X: VAXNum, F>
+    (
+        cpu: &mut VAXCPU<B>,
+        func: F
+    )
+    -> Result<(), Error>
+    where F: Fn(X, &mut VAXCPU<B>) -> Result<(), Error>
+{
+    let opr_a = parse_read_operand::<B,X>(cpu)?.read(cpu)?;
+
+    func(opr_a, cpu)
+}
+
 
 
 pub fn m_instr_wrap
@@ -154,7 +188,7 @@ pub fn push<B: VAXBus, T: VAXNum>(cpu: &mut VAXCPU<B>, val: T) -> Result<(), Err
     cpu.regfile.set_sp(sp.wrapping_sub(T::BYTE_LEN as u32));
     Ok(())
 }
-#[inline]
+
 pub fn pop<B: VAXBus, T: VAXNum>(cpu: &mut VAXCPU<B>) -> Result<T, Error> {
     let sp = cpu.regfile.get_sp();
     let res = cpu.read_val(sp)?;

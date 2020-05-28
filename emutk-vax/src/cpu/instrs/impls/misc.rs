@@ -44,6 +44,7 @@ pub fn instr_halt
     Ok(())
 }
 
+
 pub fn instr_clr
     <B: VAXBus, T: VAXNum>
     (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
@@ -128,5 +129,27 @@ pub fn instr_mfpr
 {
     rw_instr_wrap::<B, u32, u32, _>(cpu, |r: u32, cpu: &mut VAXCPU<B>| -> Result<u32, Error> {
         cpu.regfile.read_msr(r as u16)
+    })
+}
+
+pub fn instr_bispsw
+    <B: VAXBus>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    r_instr_wrap(cpu, |x: u16, cpu: &mut VAXCPU<B>| -> Result<(), Error> {
+        cpu.regfile.get_psl_mut().0 |= (x as u32);
+        Ok(())
+    })
+}
+
+pub fn instr_bicpsw
+    <B: VAXBus>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    r_instr_wrap(cpu, |x: u16, cpu: &mut VAXCPU<B>| -> Result<(), Error> {
+        cpu.regfile.get_psl_mut().0 &= ((!x) as u32);
+        Ok(())
     })
 }

@@ -1,12 +1,13 @@
-const BOOTLOADER: &'static [u8] = include_bytes!("../../ka42a_orig.bin");
+
+const BOOTLOADER: &'static [u8] = include_bytes!("../../emutk-vax/vsrc/bootrom/bootloader.bin");
+
+pub mod mcbus;
 
 use emutk_vax::cpu::VAXCPU;
 use emutk_vax::bus::{
     MicroVAX3100Bus,
     RAMSize,
 };
-
-
 
 fn main() {
     println!("Attempting to run bootrom!\n");
