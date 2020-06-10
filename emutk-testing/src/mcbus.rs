@@ -65,8 +65,13 @@ pub trait Device {
 
     fn device_origin(&mut self) -> DeviceOrigin;
 
+    fn interrupt_pending(&mut self) -> bool;
+
+    fn tick(&mut self);
+
     fn serialize(&mut self, space: &mut [u8]);
 }
+
 
 impl VirtVAXBus {
     pub fn new(boot_rom: &'static [u8], ram_size: usize) -> VirtVAXBus {

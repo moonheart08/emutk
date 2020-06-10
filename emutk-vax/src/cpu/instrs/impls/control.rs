@@ -305,3 +305,132 @@ pub fn instr_rsb
     cpu.regfile.set_pc(npc);
     Ok(())
 }
+
+pub fn instr_callg
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    let mut arglist = parse_read_operand::<T, u8>(cpu)?;
+    arglist.validate(cpu)?;
+    let mut dest = parse_read_operand::<T, u8>(cpu)?;
+    dest.validate(cpu)?;
+
+    let header = cpu.read_val::<u16>(dest.address()?)?;
+
+
+    let old_sp = cpu.regfile.get_sp(); 
+    let sp = old_sp & !0x3; // zero lower 2 bits for alignment
+    cpu.regfile.set_sp(sp);
+    // read mask and push registers as needed
+    for i in 11..0 {
+        if header & (1 << i) != 0 {
+            let reg = cpu.regfile.read_gpr(i);
+            push(cpu, reg)?;
+        }
+    }
+    push(cpu, cpu.regfile.get_pc())?;
+    push(cpu, cpu.regfile.read_gpr(13))?; // FP
+    push(cpu, cpu.regfile.read_gpr(12))?; // AP
+    let psl = cpu.regfile.get_psl_mut();
+    psl.0 &= !0xF; // zero NZVC
+    let masks = ((old_sp & 0x3) << 30) 
+              | ((header as u32 & 0b111_1111_1111) << 15)
+              | (psl.0 & 0xFFFF);
+    push(cpu, masks)?;
+    push(cpu, 0_u32)?;
+    cpu.regfile.write_gpr(13, sp);
+    cpu.regfile.write_gpr(12, arglist.address()?);
+
+    let psl = cpu.regfile.get_psl_mut(); // rustc pls
+    psl.set_dv((header & (1 << 15)) != 0);
+    psl.set_iv((header & (1 << 14)) != 0);
+    psl.set_fu(false);
+
+    Ok(())
+}
+
+pub fn instr_calls
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    let mut argnum = parse_read_operand::<T, u32>(cpu)?.read(cpu)?;
+    let mut dest = parse_read_operand::<T, u8>(cpu)?;
+    dest.validate(cpu)?;
+
+    push(cpu, argnum)?;
+    let tmp1 = cpu.regfile.get_sp();
+
+    let header = cpu.read_val::<u16>(dest.address()?)?;
+
+
+    let old_sp = cpu.regfile.get_sp(); 
+    let sp = old_sp & !0x3; // zero lower 2 bits for alignment
+    cpu.regfile.set_sp(sp);
+    // read mask and push registers as needed
+    for i in 11..0 {
+        if header & (1 << i) != 0 {
+            let reg = cpu.regfile.read_gpr(i);
+            push(cpu, reg)?;
+        }
+    }
+    push(cpu, cpu.regfile.get_pc())?;
+    push(cpu, cpu.regfile.read_gpr(13))?; // FP
+    push(cpu, cpu.regfile.read_gpr(12))?; // AP
+    let psl = cpu.regfile.get_psl_mut();
+    psl.0 &= !0xF; // zero NZVC
+    let masks = ((old_sp & 0x3) << 30) 
+              | ((header as u32 & 0b111_1111_1111) << 15)
+              | (psl.0 & 0xFFFF)
+              | 1 << 29;
+    push(cpu, masks)?;
+    push(cpu, 0_u32)?;
+    cpu.regfile.write_gpr(13, sp);
+    cpu.regfile.write_gpr(12, tmp1);
+
+    let psl = cpu.regfile.get_psl_mut(); // rustc pls
+    psl.set_dv((header & (1 << 15)) != 0);
+    psl.set_iv((header & (1 << 14)) != 0);
+    psl.set_fu(false);
+
+    Ok(())
+}
+
+pub fn instr_ret
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    {
+        let sp = cpu.regfile.get_sp();
+        cpu.regfile.set_sp(sp + 4);
+    }
+    let tmp1: u32 = pop(cpu)?;
+    let ap = pop(cpu)?;
+    cpu.regfile.write_gpr(12, ap);
+    let fp = pop(cpu)?;
+    cpu.regfile.write_gpr(13, fp);
+    let pc = pop(cpu)?;
+    cpu.regfile.set_pc(pc);
+    let tmp2 = (tmp1 >> 16) & 0b111_1111_1111;
+    for i in 0..11 {
+        if tmp2 & (1 << i) != 0 {
+            let rval = pop(cpu)?;
+            cpu.regfile.write_gpr(i, rval);
+        }
+    }
+    let offs = (tmp1 >> 30) & 0x3;
+    let sp = cpu.regfile.get_sp();
+    cpu.regfile.set_sp(sp + offs);
+
+    if ((tmp1 >> 29) & 0x1) != 0 {
+        let v: u32 = pop(cpu)?;
+        let tmp4 = 4 * (v & 0xFF);
+        cpu.regfile.set_sp(sp + offs + tmp4);
+    }
+    let psl = cpu.regfile.get_psl_mut();
+    psl.0 &= tmp1 & 0xFFFF;
+
+    Ok(())
+}

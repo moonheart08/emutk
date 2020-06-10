@@ -34,7 +34,7 @@ impl<T: VAXBus> VAXCPU<'_, T> {
                 0x02 => REI, Some(misc::instr_noimpl);
                 0x03 => BPT, Some(misc::instr_noimpl);
                 0x04 => RET, Some(misc::instr_noimpl);
-                0x05 => RSB, Some(misc::instr_noimpl);
+                0x05 => RSB, Some(control::instr_rsb);
                 0x06 => LDPCTX, Some(misc::instr_noimpl);
                 0x07 => SVPCTX, Some(misc::instr_noimpl);
                 0x08 => CVTPS, Some(misc::instr_noimpl);
