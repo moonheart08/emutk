@@ -27,7 +27,7 @@ impl<B: VAXBus> VAXCPU<'_, B> {
 }
 
 #[cfg(test)]
-fn simple_test_cpu_with_data(dat: &[u8]) -> (VAXCPU<RAMBus>, RAMBus) {
+pub fn simple_test_cpu_with_data(dat: &[u8]) -> (VAXCPU<RAMBus>, RAMBus) {
     let cpu = VAXCPU::new();
     let mut bus = RAMBus::new(dat.len()+1024);
     let buf = bus.ram_mut();
@@ -36,12 +36,30 @@ fn simple_test_cpu_with_data(dat: &[u8]) -> (VAXCPU<RAMBus>, RAMBus) {
 }
 
 #[cfg(test)]
-fn simple_test_cpu<'a>() -> (VAXCPU<'a, RAMBus>, RAMBus) {
+pub fn simple_test_cpu<'a>() -> (VAXCPU<'a, RAMBus>, RAMBus) {
     let cpu = VAXCPU::new();
     let bus = RAMBus::new(8192);
     (cpu, bus)
 }
 
+
+#[cfg(test)]
+pub fn run_sample_to_done<'a>(dat: &'_ [u8]) -> (VAXCPU<'a, RAMBus>, RAMBus) {
+    let mut cpu = VAXCPU::new();
+    let mut bus = RAMBus::new(dat.len()+1024);
+    let buf = bus.ram_mut();
+    buf[0..dat.len()].copy_from_slice(dat);
+    while cpu.halted == false {
+        match cpu.run_tick() {
+            Ok(()) => {},
+            Err(e) => {
+                panic!("{:?}", e);
+            }
+        }
+    }
+
+    (cpu, bus)
+}
 
 #[cfg(test)]
 mod tests {

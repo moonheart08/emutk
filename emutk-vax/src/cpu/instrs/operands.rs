@@ -200,7 +200,7 @@ pub enum UnresolvedOperand<T: VAXNum> {
 }
 
 impl<T: VAXNum>  UnresolvedOperand<T> {
-    #[inline]
+    #[inline] 
     pub fn validate<B: VAXBus>(&mut self, cpu: &mut VAXCPU<B>) -> Result<(), Error> 
     {
         match self {

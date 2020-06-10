@@ -62,11 +62,7 @@ pub fn instr_adwc
     -> Result<(), Error>
 {
     rm_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
-        let c: u32 = if cpu.regfile.get_psl().get_c() {
-            1
-        } else {
-            0
-        };
+        let c: u32 = cpu.regfile.get_psl().get_c() as u32;
 
         let v = x.flagged_add(y.wrapping_add(&T::primitive_from(c)));
         cpu.commit_flags(v.0);

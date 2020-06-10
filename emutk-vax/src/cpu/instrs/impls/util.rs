@@ -130,6 +130,23 @@ pub fn m_instr_wrap
     Ok(())
 }
 
+pub fn w_instr_wrap
+    <B: VAXBus, O: VAXNum, F>
+    (
+        cpu: &mut VAXCPU<B>,
+        func: F
+    )
+    -> Result<(), Error>
+    where F: Fn(&mut VAXCPU<B>) -> Result<O, Error>
+{
+    let mut opm_o = parse_write_operand::<B,O>(cpu)?;
+
+    let v = func(cpu)?;
+    opm_o.execute_write(cpu, v);
+    Ok(())
+}
+
+
 
 pub fn rw_instr_wrap
     <B: VAXBus, I: VAXNum, O: VAXNum, F>
