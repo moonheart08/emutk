@@ -346,8 +346,8 @@ impl<T: VAXBus> VAXCPU<'_, T> {
 
                 0x27D => CLRO, Some(misc::instr_clr::<_, u128>);
                 0x27D => MOVO, Some(arith::instr_mov::<_, u128>);
-                0x27E => MOVAO, Some(arith::instr_mova::<_, u128>);
-                0x27F => PUSHAO, Some(arith::instr_pusha::<_, u128>);
+                0x27E => MOVAO, Some(misc::instr_mova::<_, u128>);
+                0x27F => PUSHAO, Some(misc::instr_pusha::<_, u128>);
                 0x280 => VVADDL, Some(misc::instr_noimpl);
                 0x281 => VSADDL, Some(misc::instr_noimpl);
                 0x282 => VVADDG, Some(misc::instr_noimpl);
