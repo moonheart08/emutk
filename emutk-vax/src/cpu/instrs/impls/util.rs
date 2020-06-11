@@ -12,6 +12,7 @@ pub fn parse_read_operand
     let pc = cpu.regfile.get_pc();
     let op_head: [u8;2] = cpu.read_val(pc)?;
     let mode = OperandMode::identify_operand(op_head)?;
+    //println!("{:?}", mode);
     cpu.regfile.set_pc(pc + mode.byte_size::<T>() as u32);
     mode.create_resolvable::<B,T>(cpu, false)
 }
@@ -24,6 +25,7 @@ pub fn parse_write_operand
     let pc = cpu.regfile.get_pc();
     let op_head: [u8;2] = cpu.read_val(pc)?;
     let mode = OperandMode::identify_operand(op_head)?;
+    //println!("{:?}", mode);
     cpu.regfile.set_pc(pc + mode.byte_size::<T>() as u32);
     mode.create_resolvable::<B,T>(cpu, true)
 }
@@ -46,6 +48,26 @@ pub fn rrw_instr_wrap
     Ok(())
 }
 
+pub fn rrww_instr_wrap
+    <T: VAXBus, X: VAXNum, Y: VAXNum, A: VAXNum, B: VAXNum, F>
+    (
+        cpu: &mut VAXCPU<T>,
+        func: F
+    )
+    -> Result<(), Error>
+    where F: Fn(X, Y, &mut VAXCPU<T>) -> Result<(A, B), Error>
+{
+    let opr_a = parse_read_operand::<T,X>(cpu)?.read(cpu)?;
+    let opr_b = parse_read_operand::<T,Y>(cpu)?.read(cpu)?;
+    let opw_o1 = parse_write_operand::<T,A>(cpu)?;
+    let opw_o2 = parse_write_operand::<T,B>(cpu)?;
+
+    let (x, y) = func(opr_a, opr_b, cpu)?;
+    opw_o1.write(cpu, x)?;
+    opw_o2.write(cpu, y)?;
+    Ok(())
+}
+
 pub fn rrrw_instr_wrap
     <T: VAXBus, X: VAXNum, Y: VAXNum, Z: VAXNum, O: VAXNum, F>
     (
@@ -62,6 +84,23 @@ pub fn rrrw_instr_wrap
 
     let v = func(opr_x, opr_y, opr_z, cpu)?;
     opw_o.write(cpu, v)?;
+    Ok(())
+}
+
+pub fn rrr_instr_wrap
+    <T: VAXBus, X: VAXNum, Y: VAXNum, Z: VAXNum, F>
+    (
+        cpu: &mut VAXCPU<T>,
+        func: F
+    )
+    -> Result<(), Error>
+    where F: Fn(X, Y, Z, &mut VAXCPU<T>) -> Result<(), Error>
+{
+    let opr_x = parse_read_operand::<T,X>(cpu)?.read(cpu)?;
+    let opr_y = parse_read_operand::<T,Y>(cpu)?.read(cpu)?;
+    let opr_z = parse_read_operand::<T,Z>(cpu)?.read(cpu)?;
+
+    let v = func(opr_x, opr_y, opr_z, cpu)?;
     Ok(())
 }
 
@@ -201,8 +240,10 @@ pub fn jump_with_word_displacement<B: VAXBus>(cpu: &mut VAXCPU<B>, disp: u16) {
 #[inline]
 pub fn push<B: VAXBus, T: VAXNum>(cpu: &mut VAXCPU<B>, val: T) -> Result<(), Error> {
     let sp = cpu.regfile.get_sp();
-    cpu.write_val( sp, val)?;
     cpu.regfile.set_sp(sp.wrapping_sub(T::BYTE_LEN as u32));
+    cpu.write_val( cpu.regfile.get_sp(), val)?;
+    //println!("SPW: {:?}", val.as_() as u32);
+    
     Ok(())
 }
 

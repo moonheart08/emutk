@@ -65,11 +65,15 @@ pub struct VAXRegisterFile {
 }
 
 macro_rules! gpr_funcs {
-    (;$($reg:literal, $get_reg:ident, $set_reg:ident);+) => {
+    (;$($reg:literal, $get_reg:ident, $get_reg_mut:ident, $set_reg:ident);+) => {
         $(
         #[inline]
         pub fn $get_reg(&self) -> u32 {
             self.gpr[$reg]
+        }
+        #[inline]
+        pub fn $get_reg_mut(&mut self) -> &mut u32 {
+            &mut self.gpr[$reg]
         }
         #[inline]
         pub fn $set_reg(&mut self, val: u32) {
@@ -111,20 +115,20 @@ macro_rules! reg_funcs {
 
 impl VAXRegisterFile {
     gpr_funcs!(
-        ; 0, get_r0, set_r0
-        ; 1, get_r1, set_r1
-        ; 2, get_r2, set_r2
-        ; 3, get_r3, set_r3
-        ; 4, get_r4, set_r4
-        ; 5, get_r5, set_r5
-        ; 6, get_r6, set_r6
-        ; 7, get_r7, set_r7
-        ; 8, get_r8, set_r8
-        ; 9, get_r9, set_r9
-        ; 10, get_r10, set_r10
-        ; 11, get_r11, set_r11
-        ; 12, get_r12, set_r12
-        ; 13, get_r13, set_r13
+        ; 0, get_r0, get_r0_mut, set_r0
+        ; 1, get_r1, get_r1_mut, set_r1
+        ; 2, get_r2, get_r2_mut, set_r2
+        ; 3, get_r3, get_r3_mut, set_r3
+        ; 4, get_r4, get_r4_mut, set_r4
+        ; 5, get_r5, get_r5_mut, set_r5
+        ; 6, get_r6, get_r6_mut, set_r6
+        ; 7, get_r7, get_r7_mut, set_r7
+        ; 8, get_r8, get_r8_mut, set_r8
+        ; 9, get_r9, get_r9_mut, set_r9
+        ; 10, get_r10, get_r10_mut, set_r10
+        ; 11, get_r11, get_r11_mut, set_r11
+        ; 12, get_r12, get_r12_mut, set_r12
+        ; 13, get_r13, get_r13_mut, set_r13
     );
 
     sp_funcs!(
@@ -186,6 +190,7 @@ impl VAXRegisterFile {
     }
 
     pub fn set_sp(&mut self, val: u32) {
+        //println!("SPR: {:01$x}", val, 8);
         if self.psl.get_is() {
             self.set_isp(val)
         } else {

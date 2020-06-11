@@ -274,10 +274,10 @@ pub fn instr_tst
     (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
     -> Result<(), Error>
 {
-    rm_instr_wrap(cpu, |x: T, y: T, cpu: &mut VAXCPU<B>| -> Result<T, Error> {
+    r_instr_wrap(cpu, |x: T, cpu: &mut VAXCPU<B>| -> Result<(), Error> {
         let v = x.flagged_sub(T::primitive_from(0_u32));
         cpu.commit_flags(v.0);
-        Ok(v.1)
+        Ok(())
     })
 }
 
@@ -330,5 +330,19 @@ pub fn instr_div2
         let v = x.flagged_div(y);
         cpu.commit_flags(v.0);
         Ok(v.1)
+    })
+}
+
+pub fn instr_ediv
+    <B: VAXBus>
+    (cpu: &mut VAXCPU<B>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    rrww_instr_wrap(cpu, |divr: u32, divd: u64, cpu: &mut VAXCPU<B>| -> Result<(u32, u32), Error> {
+        let (flags, quo) = divd.flagged_div(divr as u64);
+        cpu.commit_flags(flags);
+        let rem = (divd as i64) % (divr as i64);
+        //println!("{}", rem);
+        Ok((quo as u32, rem as u64 as u32))
     })
 }

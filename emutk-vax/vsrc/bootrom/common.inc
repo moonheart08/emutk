@@ -17,4 +17,7 @@
 .set SCBB, 17
 .set SAVPC, 42
 .set SAVPSL, 43
+
+.set STACK_LEN, 0x0200
+
 .endif

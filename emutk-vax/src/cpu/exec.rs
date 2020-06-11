@@ -7,6 +7,8 @@ use crate::Error;
 
 use crate::cpu::instrs::InstructionType;
 use crate::cpu::instrs::execute_instr;
+use crate::cpu::instrs::MultiInstruction;
+use crate::cpu::instrs::exec_multi_instructions;
 
 use emutk_core::cycles::Cycles;
 
@@ -16,13 +18,26 @@ impl<B: VAXBus> VAXCPU<'_, B> {
             return Ok(());
         }
 
-        let pc = self.regfile.get_pc();
-        let instr = self.read_val(pc)?;
+        if self.multi_instr_active != MultiInstruction::None {
+            let mut cyc = Cycles(0);
+            exec_multi_instructions(self, &mut cyc)?;
+            self.cur_cycle += cyc;
+            Ok(())
+        } else {
+            let pc = self.regfile.get_pc();
+            let instr = self.read_val(pc)?;
 
-        let mut cyc = Cycles(0);
-        execute_instr(instr, self, &mut cyc)?;
-        self.cur_cycle += cyc;
-        Ok(())
+            //println!("{:?}", InstructionType::from_instrid(instr));
+            //println!("{:01$x}", pc, 8);
+
+            let mut cyc = Cycles(0);
+            execute_instr(instr, self, &mut cyc)?;
+            self.cur_cycle += cyc;
+            if self.halted {
+                println!("HALT: {:01$x}", pc, 8);
+            }
+            Ok(())
+        }
     }
 }
 

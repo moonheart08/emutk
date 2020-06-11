@@ -16,6 +16,7 @@ use regfile::VAXRegisterFile;
 use crate::Error;
 use crate::bus::VAXBus;
 use crate::CVZN;
+use crate::cpu::instrs::MultiInstruction;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, FromPrimitive, ToPrimitive)]
 pub enum PrivilegeMode {
@@ -26,7 +27,7 @@ pub enum PrivilegeMode {
 }
 
 pub struct VAXCPU<'bus, Bus: VAXBus + 'static> {
-    regfile: VAXRegisterFile,
+    pub regfile: VAXRegisterFile,
 
 
     halted: bool,
@@ -36,6 +37,8 @@ pub struct VAXCPU<'bus, Bus: VAXBus + 'static> {
     itable: Option<[Option<fn(&mut VAXCPU<'_, Bus> , &mut Cycles) -> Result<(), Error>>; 1280]>,
 
     cur_cycle: Cycles,
+
+    multi_instr_active: MultiInstruction,
 }
 
 impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
@@ -49,6 +52,7 @@ impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
 
 
             cur_cycle: Cycles(0),
+            multi_instr_active: MultiInstruction::None,
         };
         cpu.setup_instr_table();
         cpu
@@ -98,6 +102,7 @@ impl<'bus, Bus: VAXBus> VAXCPU<'bus, Bus> {
         if self.regfile.get_mapen() {
             todo!()
         } else {
+            //println!("WR: {:?} to {:02$x}", val.into_le_bytes(), addr, 8);
             let (cyc, _) = bus.write_val(addr as usize, val);
             self.cur_cycle += cyc;
             Ok(())

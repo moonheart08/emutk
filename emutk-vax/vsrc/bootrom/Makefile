@@ -3,7 +3,7 @@ LD := vax-unknown-netbsdelf-ld
 OBJCOPY := vax-unknown-netbsdelf-objcopy
 
 S_FILES := $(wildcard *.s)
-OBJS := start.o util.o
+OBJS := start.o util.o dict.o forth.o corewords.o incalloc.o
 
 %.o : %.s
 	$(AS) $< -o $@

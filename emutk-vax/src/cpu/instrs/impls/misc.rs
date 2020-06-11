@@ -16,6 +16,19 @@ pub fn instr_invalid
     return Err(Error::new_reserved_instruction_fault())
 }
 
+pub fn instr_bpt
+    <T: VAXBus>
+    (cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles)
+    -> Result<(), Error>
+{
+    for i in 0..15 {
+        println!("R{}: {:02$x}", i, cpu.regfile.read_gpr(i), 8);
+    }
+
+    Ok(())
+}
+
+
 pub fn instr_noimpl
     <T: VAXBus>
     (_cpu: &mut VAXCPU<T>, _cycle_count: &mut Cycles)

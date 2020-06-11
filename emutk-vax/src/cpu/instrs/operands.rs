@@ -109,10 +109,21 @@ impl OperandMode {
         use OperandMode::*;
         let pc = cpu.regfile.get_pc();
         match self {
-            IndexedRegisterDeferred(_, _) => todo!(),
+            IndexedRegisterDeferred(r, i) => {
+                let v = cpu.regfile.read_gpr(*i);
+                let idx = cpu.regfile.read_gpr(*r).wrapping_mul(T::BYTE_LEN as u32);
+                //println!("IDXD: {:01$x}", v.wrapping_add(idx), 8);
+                Ok(UnresolvedOperand::Mem(v.wrapping_add(idx)))
+            },
             IndexedAutodecrement(_, _) => todo!(),
             IndexedAutoincrement(_, _) => todo!(),
-            IndexedAutoincrementDeferred(_, _) => todo!(),
+            IndexedAutoincrementDeferred(r, i) => {
+                /*let v = cpu.regfile.read_gpr(*r);
+                cpu.regfile.write_gpr(*r, v.wrapping_add(T::BYTE_LEN as u32));
+                let idx = cpu.regfile.read_gpr(*i) * T::BYTE_LEN as u32;
+                Ok(UnresolvedOperand::DeferredMem(v.wrapping_add(idx)))*/
+                todo!()
+            },
             IndexedByteDisplacement(_, _) => todo!(),
             IndexedByteDisplacementDeferred(_, _) => todo!(),
             IndexedWordDisplacement(_, _) => todo!(),
@@ -140,7 +151,7 @@ impl OperandMode {
             Autodecrement(r) => {
                 let v = cpu.regfile.read_gpr(*r);
                 cpu.regfile.write_gpr(*r, v.wrapping_sub(T::BYTE_LEN as u32));
-                Ok(UnresolvedOperand::Mem(v))
+                Ok(UnresolvedOperand::Mem(v.wrapping_sub(T::BYTE_LEN as u32)))
             },
             AutoincrementDeferred(r) => {
                 let v = cpu.regfile.read_gpr(*r);

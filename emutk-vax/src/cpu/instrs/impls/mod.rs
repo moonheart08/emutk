@@ -4,6 +4,7 @@ mod control;
 mod util;
 mod bitfield;
 mod convert;
+mod string;
 #[cfg(test)]
 mod tests;
 
@@ -16,7 +17,8 @@ use control::BranchCondition;
 use emutk_core::{
     cycles::Cycles,
 };
-
+pub use string::MultiInstruction;
+pub use string::exec_multi_instructions;
 /*
 // Instruction form:
 fn instr_name(&mut VAXCPU, &mut Cycles)
@@ -32,7 +34,7 @@ impl<T: VAXBus> VAXCPU<'_, T> {
                 0x00 => HALT, Some(misc::instr_halt);
                 0x01 => NOP, Some(misc::instr_nop);
                 0x02 => REI, Some(misc::instr_noimpl);
-                0x03 => BPT, Some(misc::instr_noimpl);
+                0x03 => BPT, Some(misc::instr_bpt);
                 0x04 => RET, Some(misc::instr_noimpl);
                 0x05 => RSB, Some(control::instr_rsb);
                 0x06 => LDPCTX, Some(misc::instr_noimpl);
@@ -69,7 +71,7 @@ impl<T: VAXBus> VAXCPU<'_, T> {
                 0x25 => MULP, Some(misc::instr_noimpl);
                 0x26 => CVTTP, Some(misc::instr_noimpl);
                 0x27 => DIVP, Some(misc::instr_noimpl);
-                0x28 => MOVC3, Some(misc::instr_noimpl);
+                0x28 => MOVC3, Some(string::instr_movc3);
                 0x29 => CMPC3, Some(misc::instr_noimpl);
                 0x2A => SCANC, Some(misc::instr_noimpl);
                 0x2B => SPANC, Some(misc::instr_noimpl);
@@ -152,7 +154,7 @@ impl<T: VAXBus> VAXCPU<'_, T> {
                 0x78 => ASHL, Some(arith::instr_ash::<_, u32>);
                 0x79 => ASHQ, Some(arith::instr_ash::<_, u64>);
                 0x7A => EMUL, Some(arith::instr_emul);
-                0x7B => EDIV, Some(misc::instr_noimpl);
+                0x7B => EDIV, Some(arith::instr_ediv);
                 0x7C => CLRQ, Some(misc::instr_clr::<_, u64>);
                 0x7D => MOVQ, Some(arith::instr_mov::<_, u64>);
                 0x7E => MOVAQ, Some(misc::instr_mova::<_, u64>);
